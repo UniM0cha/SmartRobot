@@ -133,28 +133,24 @@ void LineTracing(int s){//라인 트레이싱, 아날로그 센서
     while(1){
         int s1 = analogRead(A1);
         int s2 = analogRead(A2);
-        Serial.println("s1 = ");
-        Serial.println(s1);
-        Serial.println("s2 = ");
-        Serial.println(s2);
-        if(s1 < s2) {
-          Serial.println("첫번째 if");
-            //wheel(-(s*0.17), s, 0);
-            wheel(-(s*0.15), -(s*0.8), 5);  // 오른쪽 앞으로 돌기
-            
-        }else if(s1 > s2) {
-          Serial.println("두번째 if");
-            //wheel((s*0.17), s, 0);
-            wheel((s*0.15), -(s*0.8), -5);  // 왼쪽 앞으로 돌기
-            
-        }else {
-            wheel(0, s, 0);
+        if(s1 < 300 && s2 > 300) {
+            wheel(-s*0.17, -s, s);  // 오른쪽 앞으로 돌기
+        }else if(s1 >300 && s2 < 300) {
+            wheel(s*17, -s, -s);  // 왼쪽 앞으로 돌기 
+        }else if( prizm.readLineSensor(3)== HIGH ){
+          wheel(-s*0.17, -s, s);  // 오른쪽 앞으로 돌기
+        }else if(prizm.readLineSensor(4)== HIGH){
+          wheel(s*17, -s, -s);  // 왼쪽 앞으로 돌기 
+        }
+        else{
+          wheel(0, -s, 0);
         }
         if(prizm.readLineSensor(3)== HIGH && prizm.readLineSensor(4)== HIGH) break;
     }
     wheel(0,0,0);
     delay(1000);
 }
+
 void wheel(int x, int y, int z){
   int A = 0, B = 0, C = 0, D = 0;
 
