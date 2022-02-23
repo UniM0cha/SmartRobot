@@ -5,35 +5,60 @@ EXPANSION exc1;
 EXPANSION exc2;
 
 void wheel(int x, int y, int z);
-int LineTraceing();
+void LineTracing();
+void LineTraceing();
+void start();
+void turn();
+int n = 0;
 
 void setup()
 {
   prizm.PrizmBegin();
-  prizm.resetEncoder(1);
   Serial.begin(9600);
 }
 
 void loop()
 {
-  int state = LineTraceing();
-  if (state == 1)
+  start();
+  LineTracing(50);
+  lift_up();
+  wheel(0, 80, 0);
+  delay(600);
+  //turn();
+  LineTracing(50);
+  prizm.PrizmEnd();
+}
+
+ void start(){
+  wheel(0, 0, -35); // 오른쪽으로 돌기
+  delay(1000);
+  wheel(-60, 60, 0); // 왼쪽 앞 대각선으로 이동
+  delay(900);
+  while (1)
   {
-    prizm.PrizmEnd();
+    wheel(-60, 0, 0); // 왼쪽으로 이동
+    if (prizm.readLineSensor(4) == HIGH)
+      break;
   }
 }
 
-void wheel(int x, int y, int z)
+void line(int l)
 {
-  int A = 0, B = 0, C = 0, D = 0;
+  while (prizm.readLineSensor(2) == LOW)
+  {
+  }
+}
 
-  A = (x * 0.5) + (y * 0.5) + (z * 0.841471);
-  B = (x * 0.5 * -1) + (y * 0.5) + (z * 0.841471);
-  C = (x * 0.5 * -1) + (y * 0.5 * -1) + (z * 0.841471);
-  D = (x * 0.5) + (y * 0.5 * -1) + (z * 0.841471);
-
-  exc1.setMotorPowers(1, A, B);
-  exc2.setMotorPowers(2, C, D);
+void turn()
+{
+  while (1)
+  {
+      wheel(0, 0, 30);
+    if (prizm.readLineSensor(4) == HIGH)
+    {
+      break;
+    }
+  }
 }
 
 int LineTraceing()
@@ -74,18 +99,17 @@ int LineTraceing()
   }
 }
 
-void print(int A1, int A2, int D2, int D3, int D4)
+void wheel(int x, int y, int z)
 {
-  Serial.print("A1: ");
-  Serial.print(A1);
-  Serial.print(" / A2: ");
-  Serial.print(A2);
-  Serial.print(" / D2: ");
-  Serial.print(D2);
-  Serial.print(" / D3: ");
-  Serial.print(D3);
-  Serial.print(" / D4: ");
-  Serial.println(D4);
+  int A = 0, B = 0, C = 0, D = 0;
+
+  A = (x * 0.5) + (y * 0.5) + (z * 0.841471);
+  B = (x * 0.5 * -1) + (y * 0.5) + (z * 0.841471);
+  C = (x * 0.5 * -1) + (y * 0.5 * -1) + (z * 0.841471);
+  D = (x * 0.5) + (y * 0.5 * -1) + (z * 0.841471);
+
+  exc1.setMotorPowers(1, A, B);
+  exc2.setMotorPowers(2, C, D);
 }
 
 void lift_up(int s){    //리프트 up 함수
