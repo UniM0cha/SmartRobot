@@ -87,17 +87,3 @@ void print(int A1, int A2, int D2, int D3, int D4)
   Serial.print(" / D4: ");
   Serial.println(D4);
 }
-
-void lift_up(int s){    //리프트 up 함수
-    n += s;
-    prizm.setMotorSpeed(1, -300);
-    delay(s);
-    prizm.setMotorSpeed(1, 0);
-}
-
-void lift_down(int s){  //리프트 down 함수
-    n -= s;
-    prizm.setMotorSpeed(1, 300);
-    delay(s);
-    prizm.setMotorSpeed(1, 0);
-}

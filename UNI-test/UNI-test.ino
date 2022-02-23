@@ -4,19 +4,41 @@ PRIZM prizm;
 EXPANSION exc1;
 EXPANSION exc2;
 
+#define RED 1;
+#define GREEN 2;
+#define BLUE 3;
+#define TRUE 1;
+#define FALSE 0;
+
 void wheel(int x, int y, int z);
-int LineTraceing();
+void LineTraceing();
+void start();
+
+int objSt[3][2] = {{1, 1}, {1, 1}, {1, 1}};
+//옮겨야할 오브젝트 배열 1,2,3라인의 1층과 2층의 유무를 정하고
+// 0 : 없음(FALSE), 1 : 있음(TRUE) 으로 정의
+
+int objEd[3][2] = {{0, 0}, {0, 0}, {0, 0}};
+//옮겨진 오브젝트 배열의 색상 1,2,3라인의 1층과 2층의 유무를 정하고
+// 0 : 없음(FALSE), 1 : 있음(TRUE) 으로 정의
 
 void setup()
 {
   prizm.PrizmBegin();
   prizm.resetEncoder(1);
   Serial.begin(9600);
+  start();
 }
 
 void loop()
 {
-  LineTraceing();
+  // LineTraceing();
+}
+
+void start()
+{
+  wheel(-30, -30, 0);
+  delay(5000);
 }
 
 void wheel(int x, int y, int z)
@@ -35,7 +57,7 @@ void wheel(int x, int y, int z)
 /**
  * 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
  */
-int LineTraceing()
+void LineTracing(int speed)
 {
   while (1)
   {
@@ -50,19 +72,19 @@ int LineTraceing()
     if (D3 == HIGH && D4 == LOW)
     {
       // D3 감지되면 왼쪽 앞
-      wheel(0, -40, -5);
+      wheel(0, -speed, -speed * 0.15);
     }
 
     if (D3 == LOW && D4 == HIGH)
     {
       // D4 감지되면 오른쪽 앞
-      wheel(0, -40, 5);
+      wheel(0, -speed, speed * 0.15);
     }
 
     if (D3 == LOW && D4 == LOW)
     {
       // D3, D4 감지 안되면 직진
-      wheel(0, -40, 0);
+      wheel(0, -speed, 0);
     }
 
     if (D3 == HIGH && D4 == HIGH)
