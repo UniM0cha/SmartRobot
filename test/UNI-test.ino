@@ -16,11 +16,7 @@ void setup()
 
 void loop()
 {
-  int state = LineTraceing();
-  if (state == 1)
-  {
-    prizm.PrizmEnd();
-  }
+  LineTraceing();
 }
 
 void wheel(int x, int y, int z)
@@ -36,41 +32,45 @@ void wheel(int x, int y, int z)
   exc2.setMotorPowers(2, C, D);
 }
 
+/**
+ * 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
+ */
 int LineTraceing()
 {
-  int a1 = analogRead(A1);
-  int a2 = analogRead(A2);
-  int D2 = prizm.readLineSensor(2);
-  int D3 = prizm.readLineSensor(3);
-  int D4 = prizm.readLineSensor(4);
-  print(a1, a2, D2, D3, D4);
-
-  if (D3 == HIGH && D4 == LOW)
+  while (1)
   {
-    // D3 감지되면 왼쪽 앞
-    wheel(0, -40, -5);
-    return 0;
-  }
+    Serial.println("Line Tracing...");
+    int a1 = analogRead(A1);
+    int a2 = analogRead(A2);
+    int D2 = prizm.readLineSensor(2);
+    int D3 = prizm.readLineSensor(3);
+    int D4 = prizm.readLineSensor(4);
+    print(a1, a2, D2, D3, D4);
 
-  if (D3 == LOW && D4 == HIGH)
-  {
-    // D4 감지되면 오른쪽 앞
-    wheel(0, -40, 5);
-    return 0;
-  }
+    if (D3 == HIGH && D4 == LOW)
+    {
+      // D3 감지되면 왼쪽 앞
+      wheel(0, -40, -5);
+    }
 
-  if (D3 == LOW && D4 == LOW)
-  {
-    // D3, D4 감지 안되면 직진
-    wheel(0, -40, 0);
-    return 0;
-  }
+    if (D3 == LOW && D4 == HIGH)
+    {
+      // D4 감지되면 오른쪽 앞
+      wheel(0, -40, 5);
+    }
 
-  if (D3 == HIGH && D4 == HIGH)
-  {
-    // D3, D4 감지되면 정지
-    // wheel(0, 0, 0);
-    return 1;
+    if (D3 == LOW && D4 == LOW)
+    {
+      // D3, D4 감지 안되면 직진
+      wheel(0, -40, 0);
+    }
+
+    if (D3 == HIGH && D4 == HIGH)
+    {
+      // D3, D4 감지되면 정지
+      // wheel(0, 0, 0);
+      break;
+    }
   }
 }
 
