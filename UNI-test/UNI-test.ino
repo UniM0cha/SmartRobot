@@ -11,7 +11,7 @@ EXPANSION exc2;
 #define FALSE 0;
 
 // 센서값을 저장할 전역변수
-int a1, a2, D2, D3, D4;
+int a1, a2, D2, D3, D4, diff;
 
 // 현재 자신이 몇번째 줄에 있는지 확인하는 변수
 int lineCurrent = 1;
@@ -32,22 +32,23 @@ void setup()
   prizm.PrizmBegin();
   prizm.resetEncoder(1);
   Serial.begin(9600);
-  collectSensor();
-  start();
-  findRightLine();
-  LineTracing();
+  setDiff();
 }
 
 void loop()
 {
-  // LineTracing(40);
+  // start();
+  // collectSensor();
+  findRightLine();
+  lineTracing();
   prizm.PrizmEnd();
 }
 
 // 처음 시작할 때 대각선으로 이동
 void start()
 {
-  wheel(-100, -30, -30);
+  collectSensor();
+  wheel(-100, 0, -33);
   delay(1800);
 }
 
@@ -65,33 +66,52 @@ void wheel(int x, int y, int z)
 }
 
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
-void LineTracing()
+void lineTracing()
 {
-  int speed = 50;
+  int frontSpeed = 50;
+  int turnSpeed = 3;
+  int errorRange = 100;
+
   while (1)
   {
     Serial.println("Line Tracing...");
     collectSensor();
 
-    if (D3 == HIGH && D4 == LOW)
-    {
-      // D3 감지되면 왼쪽 앞
-      wheel(0, -speed, -speed * 0.15);
-    }
-
-    if (D3 == LOW && D4 == HIGH)
-    {
-      // D4 감지되면 오른쪽 앞
-      wheel(0, -speed, speed * 0.15);
-    }
-
     if (D3 == LOW && D4 == LOW)
     {
-      // D3, D4 감지 안되면 직진
-      wheel(0, -speed, 0);
+      // 디지털 센서로 알아내기 힘들 때 아날로그 센서 이용
+      // 오차 범위 밖의 변화가 있을 경우
+      if (a1 > a2 + errorRange)
+      {
+        // 왼쪽 앞
+        wheel(0, -frontSpeed, -turnSpeed);
+      }
+
+      else if (a1 + errorRange < a2)
+      {
+        // 오른쪽 앞
+        wheel(0, -frontSpeed, turnSpeed);
+      }
+      else
+      {
+        // 직진
+        wheel(0, -frontSpeed, 0);
+      }
     }
 
-    if (D3 == HIGH && D4 == HIGH)
+    else if (D3 == HIGH && D4 == LOW)
+    {
+      // 왼쪽 앞
+      wheel(0, -frontSpeed, -(turnSpeed + 8));
+    }
+
+    else if (D3 == LOW && D4 == HIGH)
+    {
+      // 오른쪽 앞
+      wheel(0, -frontSpeed, (turnSpeed + 8));
+    }
+
+    else if (D3 == HIGH && D4 == HIGH)
     {
       // D3, D4 감지되면 정지
       wheel(0, 0, 0);
@@ -102,7 +122,7 @@ void LineTracing()
 
 void collectSensor()
 {
-  a1 = analogRead(A1);
+  a1 = analogRead(A1) + diff;
   a2 = analogRead(A2);
   D2 = prizm.readLineSensor(2);
   D3 = prizm.readLineSensor(3);
@@ -133,4 +153,11 @@ void findRightLine()
       break;
     }
   }
+}
+
+void setDiff()
+{
+  a1 = analogRead(A1);
+  a2 = analogRead(A2);
+  diff = a2 - a1;
 }
