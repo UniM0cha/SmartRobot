@@ -47,10 +47,8 @@ void loop()
 // 처음 시작할 때 대각선으로 이동
 void start()
 {
-  wheel(-80, 0, -20);
-  delay(1500);
-  wheel(-50, 0, -5);
-  delay(1000);
+  wheel(-100, -30, -30);
+  delay(1800);
 }
 
 void wheel(int x, int y, int z)
@@ -127,24 +125,8 @@ void findRightLine()
   while (1)
   {
     collectSensor();
-    wheel(-60, 0, 0);
+    wheel(-45, 0, 0);
     if (D4 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      break;
-    }
-  }
-}
-
-void findLeftLine()
-{
-  Serial.println("Find Left Line...");
-  while (1)
-  {
-    collectSensor();
-    wheel(-60, 0, 0);
-    if (D3 == HIGH)
     {
       Serial.println("Line Found");
       wheel(0, 0, 0);
