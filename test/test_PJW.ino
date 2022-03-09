@@ -13,14 +13,25 @@ EXPANSION exc2;
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_1X);
 
 void wheel(int x, int y, int z);
+void Direction_find(int now_line, int next);
+void Direction_move(String direc, int cnt);
 void LineTracing();
 void LineTraceing();
 void lift_up(int s);
 void lift_down(int s);
+void findRightLine();
+void findLeftLine();
 void start();
 void turn();
+void collectSensor();
 int ColorCheck();
+
+int destination = 0;
+int count = 0;
 int n = 0;
+int TargetLine = 0;
+int CurrentLine = 1;  // 1 레드  2 그린  3 블루
+int a1, a2, D2, D3, D4;
 
 void setup()
 {
@@ -38,10 +49,18 @@ void loop()
   //lift_down(350);
 
   LineTracing(50);
-  lift_up(1000);
+  lift_up(4700);
   Serial.println(ColorCheck());
-  lift_down(n);
-  
+  TargetLine = ColorCheck();
+  wheel(0, 60, 0);
+  delay(1000);
+  turn();
+  Direction_find(CurrentLine, TargetLine);
+  LineTracing(50);
+  lift_down(400);
+  wheel(0, 60, 0);
+  delay(1000);
+
   //wheel(0,50,0);
   //delay(1000);
   //wheel(0, 80, 0);
@@ -88,11 +107,8 @@ void LineTracing(int speed)
   while (1)
   {
     Serial.println("Line Tracing...");
-    int a1 = analogRead(A1);
-    int a2 = analogRead(A2);
-    int D2 = prizm.readLineSensor(2);
-    int D3 = prizm.readLineSensor(3);
-    int D4 = prizm.readLineSensor(4);
+    
+    collectSensor();
 
 
     if (D3 == HIGH && D4 == LOW)
@@ -183,4 +199,90 @@ uint16_t r, g, b, c;
         }
     }
     return r_cr;
+}
+void Direction_find(int now_line, int next){//목적지 라인 찾기
+    int destination = now_line - next;//음수면 왼쪽, 양수면 오른쪽
+    int cnt = abs(destination);//라인 이동 횟수
+    String direc = "";
+
+    if(destination < 0){
+        direc = "LEFT";  
+    }else if(destination > 0){
+        direc = "RIGHT";
+    }else{
+        direc = "STOP";
+    }
+    Direction_move(direc, cnt);//목적지 라인으로 이동
+}
+
+void Direction_move(String direc, int cnt){//목적지 라인으로 이동하는 함수
+    for(int i=0; i<cnt; i++){//이동 횟수에 따른 반복문
+        if(direc.equals("LEFT")){
+            findLeftLine();
+            CurrentLine += 1;
+        }else if(direc.equals("RIGHT")){
+            findRightLine();
+            CurrentLine -= 1;
+        }else{
+            wheel(0,0,0);
+        }
+        delay(200);
+    }
+    while(prizm.readLineSensor(5)==LOW){
+        exc2.setMotorSpeeds(2, -50, -50);
+        if(prizm.readLineSensor(5)==HIGH){break;}
+    }
+    wheel(0,0,0);
+}
+
+void findRightLine()
+{
+  Serial.println("Find Right Line...");
+  while (1)
+  {
+    collectSensor();
+    wheel(-45, 0, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      CurrentLine += 1;
+      break;
+    }
+  }
+}
+
+void findLeftLine()
+{
+  Serial.println("Left Right Line...");
+  while (1)
+  {
+    collectSensor();
+    wheel(45, 0, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}
+
+void collectSensor()
+{
+  a1 = analogRead(A1);
+  a2 = analogRead(A2);
+  D2 = prizm.readLineSensor(2);
+  D3 = prizm.readLineSensor(3);
+  D4 = prizm.readLineSensor(4);
+  Serial.print("A1: ");
+  Serial.print(a1);
+  Serial.print(" / A2: ");
+  Serial.print(a2);
+  Serial.print(" / D2: ");
+  Serial.print(D2);
+  Serial.print(" / D3: ");
+  Serial.print(D3);
+  Serial.print(" / D4: ");
+  Serial.println(D4);
 }
