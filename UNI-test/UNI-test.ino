@@ -1,31 +1,43 @@
 #include <PRIZM.h>
 #include <stdio.h>
+#include "Adafruit_TCS34725.h"
 PRIZM prizm;
 EXPANSION exc1;
 EXPANSION exc2;
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_1X);
 
-#define RED 1;
-#define GREEN 2;
-#define BLUE 3;
+#define RED 0;
+#define GREEN 1;
+#define BLUE 2;
+
+#define RIGHT 1;
+#define LEFT -1;
+#define STOP 0;
+
 #define TRUE 1;
 #define FALSE 0;
 
 // 센서값을 저장할 전역변수
 int a1, a2, D2, D3, D4, diff;
 
-// 현재 자신이 몇번째 줄에 있는지 확인하는 변수
-int lineCurrent = 1;
-// 1 = 첫번째줄 / 2 = 두번째줄 / 3 = 세번째줄
+// 현재 리프트 높이
+int n = 0;
 
-// 처음에 블록이 놓여져 있는 위치
-int objSt[3][2] = {{1, 1}, {1, 1}, {1, 1}};
-//옮겨야할 오브젝트 배열 1,2,3라인의 1층과 2층의 유무를 정하고
-// 0 : 없음(FALSE), 1 : 있음(TRUE) 으로 정의
+// 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄
+// 현재 자신이 있는 줄
+int currentLine = 0;
+// 목적지 줄
+int targetLine = 0;
 
-// 결과적으로 이렇게 되어야함
-int objEd[3][2] = {{0, 0}, {0, 0}, {0, 0}};
-//옮겨진 오브젝트 배열의 색상 1,2,3라인의 1층과 2층의 유무를 정하고
-// 0 : 없음(FALSE), 1 : 있음(TRUE) 으로 정의
+/**
+ * 옮겨야할 오브젝트 배열 1, 2, 3라인의 1층과 2층의 유무를 정의할 변수들
+ * 0 : 없음(FALSE), 1 : 있음(TRUE) 으로 정의
+ */
+
+// 처음 블록이 놓여있는 곳
+int startBlock[3][2] = {{1, 1}, {1, 1}, {1, 1}};
+// 블록을 놓아야 하는 곳
+int endBlock[3][2] = {{0, 0}, {0, 0}, {0, 0}};
 
 void setup()
 {
@@ -33,14 +45,31 @@ void setup()
   prizm.resetEncoder(1);
   Serial.begin(9600);
   setDiff();
+  collectSensor();
 }
 
 void loop()
 {
-  // start();
-  // collectSensor();
-  findRightLine();
-  lineTracing();
+  start();
+
+  LineTracing();
+  lift_up(4700);
+  Serial.println(ColorCheck());
+  targetLine = ColorCheck();
+
+  // 뒤로가서 턴
+  wheel(0, 60, 0);
+  delay(1000);
+  turn();
+
+  // 목적지 탐색
+  Direction_find(currentLine, targetLine);
+  turn();
+  LineTracing();
+  lift_down(400);
+  wheel(0, 60, 0);
+  delay(1000);
+
   prizm.PrizmEnd();
 }
 
@@ -50,6 +79,17 @@ void start()
   collectSensor();
   wheel(-100, 0, -33);
   delay(1800);
+  while (1)
+  {
+    collectSensor();
+    wheel(-45, 0, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
 }
 
 void wheel(int x, int y, int z)
@@ -66,7 +106,7 @@ void wheel(int x, int y, int z)
 }
 
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
-void lineTracing()
+void LineTracing()
 {
   int frontSpeed = 50;
   int turnSpeed = 3;
@@ -120,6 +160,7 @@ void lineTracing()
   }
 }
 
+// 센서 값 읽는 함수
 void collectSensor()
 {
   a1 = analogRead(A1) + diff;
@@ -150,6 +191,24 @@ void findRightLine()
     {
       Serial.println("Line Found");
       wheel(0, 0, 0);
+      currentLine++;
+      break;
+    }
+  }
+}
+
+void findLeftLine()
+{
+  Serial.println("Find Right Line...");
+  while (1)
+  {
+    collectSensor();
+    wheel(45, 0, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      currentLine--;
       break;
     }
   }
@@ -160,4 +219,120 @@ void setDiff()
   a1 = analogRead(A1);
   a2 = analogRead(A2);
   diff = a2 - a1;
+}
+
+void lift_up(int s)
+{ //리프트 up 함수
+  n += s;
+  prizm.setMotorSpeed(1, -300);
+  delay(s);
+  prizm.setMotorSpeed(1, 0);
+}
+
+void lift_down(int s)
+{ //리프트 down 함수
+  n -= s;
+  prizm.setMotorSpeed(1, 300);
+  delay(s);
+  prizm.setMotorSpeed(1, 0);
+}
+
+int ColorCheck()
+{
+  uint16_t r, g, b, c;
+  tcs.getRawData(&r, &g, &b, &c);
+  int r_cr;
+  Serial.print("r : ");
+  Serial.print(r);
+  Serial.print(", g : ");
+  Serial.print(g);
+  Serial.print(", b : ");
+  Serial.print(b);
+  Serial.print(", c : ");
+  Serial.print(c);
+  Serial.println();
+  if (c > 3000)
+  {
+    Serial.println("color 인식 error");
+    tcs.setInterrupt(true);
+    r_cr = 4;
+  }
+  else
+  {
+    tcs.setInterrupt(false);
+    if (r >= 440 && r <= 500 && g >= 220 && g <= 280 && b >= 200 && b <= 260)
+    {
+      Serial.println("RED");
+      r_cr = RED;
+    }
+    else if (r >= 180 && r <= 240 && g >= 430 && g <= 490 && b >= 240 && b <= 300)
+    {
+      Serial.println("GREEN");
+      r_cr = GREEN;
+    }
+    else if (r >= 100 && r <= 160 && g >= 230 && g <= 290 && b >= 350 && b <= 410)
+    {
+      Serial.println("BLUE");
+      r_cr = BLUE;
+    }
+    else if (r >= 800 && r <= 940 && g >= 810 && g <= 950 && b >= 370 && b <= 510)
+    {
+      Serial.println("YELLOW");
+      r_cr = 3;
+    }
+  }
+  return r_cr;
+}
+
+void turn()
+{
+  while (1)
+  {
+    wheel(0, 0, 30);
+    if (prizm.readLineSensor(4) == HIGH)
+    {
+      break;
+    }
+  }
+}
+
+void Direction_find(int now_line, int next)
+{                                    //목적지 라인 찾기
+  int destination = now_line - next; //음수면 오른쪽, 양수면 왼쪽
+  int cnt = abs(destination);        //라인 이동 횟수
+  int direc = 0;
+
+  if (destination < 0)
+  {
+    direc = RIGHT;
+  }
+  else if (destination > 0)
+  {
+    direc = LEFT;
+  }
+  else
+  {
+    direc = STOP;
+  }
+  Direction_move(direc, cnt); //목적지 라인으로 이동
+}
+
+void Direction_move(int direc, int cnt)
+{ //목적지 라인으로 이동하는 함수
+  for (int i = 0; i < cnt; i++)
+  { //이동 횟수에 따른 반복문
+    if (direc == RIGHT)
+    {
+      findLeftLine();
+    }
+    else if (direc == LEFT)
+    {
+      findRightLine();
+    }
+    else
+    {
+      wheel(0, 0, 0);
+    }
+  }
+  wheel(0, 0, 0);
 }
