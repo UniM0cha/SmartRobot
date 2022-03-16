@@ -66,16 +66,14 @@ void loop()
   //  }
   targetLine = ColorCheck();
   // // 뒤로가서 턴
-  wheel(0, 60, 0);
-  delay(1000);
+  LineTracingBack(1000);
 
   // // 목적지 탐색
   Direction_find(currentLine, targetLine);
   turn();
   LineTracing();
   lift_down(600);
-  wheel(0, 60, 0);
-  delay(1000);
+  LineTracingBack(1000);
 
   // LineTracing();
   // LineTracingBack(1000);
@@ -119,8 +117,9 @@ void wheel(int x, int y, int z)
 void LineTracing()
 {
   int frontSpeed = 40;
-  int turnSpeed = 2;
-  int errorRange = 100;
+  int analogTurnSpeed = 2;
+  int digitalTurnSpeed = 4;
+  int errorRange = 50;
 
   while (1)
   {
@@ -134,13 +133,15 @@ void LineTracing()
       if (a1 > a2 + errorRange)
       {
         // 왼쪽 앞
-        wheel(0, -frontSpeed, -turnSpeed);
+        // wheel(0, -frontSpeed, -analogTurnSpeed);
+        wheel(analogTurnSpeed, -frontSpeed, -analogTurnSpeed);
       }
 
       else if (a1 + errorRange < a2)
       {
         // 오른쪽 앞
-        wheel(0, -frontSpeed, turnSpeed);
+        // wheel(0, -frontSpeed, analogTurnSpeed);
+        wheel(-analogTurnSpeed, -frontSpeed, analogTurnSpeed);
       }
       else
       {
@@ -152,13 +153,13 @@ void LineTracing()
     else if (D3 == HIGH && D4 == LOW)
     {
       // 왼쪽 앞
-      wheel(0, -frontSpeed, -(turnSpeed + 5));
+      wheel(0, -frontSpeed, -digitalTurnSpeed);
     }
 
     else if (D3 == LOW && D4 == HIGH)
     {
       // 오른쪽 앞
-      wheel(0, -frontSpeed, (turnSpeed + 5));
+      wheel(0, -frontSpeed, digitalTurnSpeed);
     }
 
     else if (D3 == HIGH && D4 == HIGH)
@@ -173,8 +174,8 @@ void LineTracing()
 void LineTracingBack(int time)
 {
   int backSpeed = 50;
-  int turnSpeed = 2;
-  int errorRange = 100;
+  int turnSpeed = 4;
+  int errorRange = 50;
   int start = millis();
   int end = 0;
 
@@ -184,44 +185,29 @@ void LineTracingBack(int time)
     collectSensor();
 
     end = millis();
-    if (end - start < 0)
+    if (end - start >= time)
     {
       wheel(0, 0, 0);
       break;
     }
 
-    if (D3 == LOW && D4 == LOW)
-    {
-      // 디지털 센서로 알아내기 힘들 때 아날로그 센서 이용
-      // 오차 범위 밖의 변화가 있을 경우
-      if (a1 > a2 + errorRange)
-      {
-        // 왼쪽 앞
-        wheel(0, backSpeed, turnSpeed);
-      }
-
-      else if (a1 + errorRange < a2)
-      {
-        // 오른쪽 앞
-        wheel(0, backSpeed, -turnSpeed);
-      }
-      else
-      {
-        // 직진
-        wheel(0, backSpeed, 0);
-      }
-    }
-
-    else if (D3 == HIGH && D4 == LOW)
+    // 디지털 센서로 알아내기 힘들 때 아날로그 센서 이용
+    // 오차 범위 밖의 변화가 있을 경우
+    if (a1 > a2 + errorRange)
     {
       // 왼쪽 앞
-      wheel(0, backSpeed, (turnSpeed + 5));
+      wheel(turnSpeed, backSpeed, 0);
     }
 
-    else if (D3 == LOW && D4 == HIGH)
+    else if (a1 + errorRange < a2)
     {
       // 오른쪽 앞
-      wheel(0, backSpeed, -(turnSpeed + 5));
+      wheel(-turnSpeed, backSpeed, 0);
+    }
+    else
+    {
+      // 후진
+      wheel(0, backSpeed, 0);
     }
   }
 }
@@ -358,10 +344,10 @@ void turn()
 {
   while (1)
   {
+    collectSensor();
     wheel(0, 0, 30);
-    if (prizm.readLineSensor(4) == HIGH)
+    if (D4 == HIGH)
     {
-      delay(200);
       break;
     }
   }

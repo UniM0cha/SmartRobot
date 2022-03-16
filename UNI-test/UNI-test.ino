@@ -69,9 +69,13 @@ void loop()
   // wheel(0, 60, 0);
   // delay(1000);
 
-  LineTracing();
-  LineTracingBack(1000);
-
+  findRightLine();
+  for (int i = 0; i < 10; i++)
+  {
+    LineTracing();
+    back(1000);
+    turn();
+  }
   prizm.PrizmEnd();
 }
 
@@ -110,110 +114,133 @@ void wheel(int x, int y, int z)
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
-  int frontSpeed = 50;
-  int turnSpeed = 2;
-  int errorRange = 100;
+  int frontSpeed = 40;
+  int analogSpeed = 4;
+  int digitalSpeed = 8;
+  int errorRange = 0;
 
   while (1)
   {
     Serial.println("Line Tracing...");
     collectSensor();
 
-    if (D3 == LOW && D4 == LOW)
+    // 도착하면 정지
+    if (D3 == HIGH && D4 == HIGH)
     {
-      // 디지털 센서로 알아내기 힘들 때 아날로그 센서 이용
-      // 오차 범위 밖의 변화가 있을 경우
-      if (a1 > a2 + errorRange)
-      {
-        // 왼쪽 앞
-        wheel(0, -frontSpeed, -turnSpeed);
-      }
-
-      else if (a1 + errorRange < a2)
-      {
-        // 오른쪽 앞
-        wheel(0, -frontSpeed, turnSpeed);
-      }
-      else
-      {
-        // 직진
-        wheel(0, -frontSpeed, 0);
-      }
-    }
-
-    else if (D3 == HIGH && D4 == LOW)
-    {
-      // 왼쪽 앞
-      wheel(0, -frontSpeed, -(turnSpeed + 5));
-    }
-
-    else if (D3 == LOW && D4 == HIGH)
-    {
-      // 오른쪽 앞
-      wheel(0, -frontSpeed, (turnSpeed + 5));
-    }
-
-    else if (D3 == HIGH && D4 == HIGH)
-    {
-      // D3, D4 감지되면 정지
       wheel(0, 0, 0);
       break;
+    }
+    // 중앙에 선이 있을 때
+    if (D2 == HIGH)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 회전
+        wheel(0, -frontSpeed, -digitalSpeed);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 회전
+        wheel(0, -frontSpeed, digitalSpeed);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 회전
+          wheel(0, -frontSpeed, -analogSpeed);
+        }
+
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 회전
+          wheel(0, -frontSpeed, analogSpeed);
+        }
+      }
+    }
+
+    // 중앙에 선이 없을 때
+    else if (D2 == LOW)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 횡이동
+        wheel(digitalSpeed, -frontSpeed, 0);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 횡이동
+        wheel(-digitalSpeed, -frontSpeed, 0);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 횡이동
+          wheel(analogSpeed, -frontSpeed, 0);
+        }
+
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 횡이동
+          wheel(-analogSpeed, -frontSpeed, 0);
+        }
+      }
     }
   }
 }
 
-void LineTracingBack(int time)
+// 뒤로 간다음 중간 맞춤
+void back(int time)
 {
-  int backSpeed = 50;
-  int turnSpeed = 2;
-  int errorRange = 100;
-  int start = millis();
-  int end = 0;
+  int frontSpeed = 0;
+  int analogSpeed = 30;
+  int digitalSpeed = 40;
+  int errorRange = 40;
+
+  wheel(0, 50, 0);
+  delay(time);
 
   while (1)
   {
-    Serial.println("Back Line Tracing...");
     collectSensor();
+    if (D2 == LOW)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 횡이동
+        wheel(digitalSpeed, -frontSpeed, 0);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 횡이동
+        wheel(-digitalSpeed, -frontSpeed, 0);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 횡이동
+          wheel(analogSpeed, -frontSpeed, 0);
+        }
 
-    end = millis();
-    if (end - start < 0)
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 횡이동
+          wheel(-analogSpeed, -frontSpeed, 0);
+        }
+      }
+    }
+    else if (D2 == HIGH)
     {
       wheel(0, 0, 0);
       break;
-    }
-
-    if (D3 == LOW && D4 == LOW)
-    {
-      // 디지털 센서로 알아내기 힘들 때 아날로그 센서 이용
-      // 오차 범위 밖의 변화가 있을 경우
-      if (a1 > a2 + errorRange)
-      {
-        // 왼쪽 앞
-        wheel(0, backSpeed, turnSpeed);
-      }
-
-      else if (a1 + errorRange < a2)
-      {
-        // 오른쪽 앞
-        wheel(0, backSpeed, -turnSpeed);
-      }
-      else
-      {
-        // 직진
-        wheel(0, backSpeed, 0);
-      }
-    }
-
-    else if (D3 == HIGH && D4 == LOW)
-    {
-      // 왼쪽 앞
-      wheel(0, backSpeed, (turnSpeed + 5));
-    }
-
-    else if (D3 == LOW && D4 == HIGH)
-    {
-      // 오른쪽 앞
-      wheel(0, backSpeed, -(turnSpeed + 5));
     }
   }
 }
@@ -346,10 +373,10 @@ void turn()
 {
   while (1)
   {
+    collectSensor();
     wheel(0, 0, 30);
-    if (prizm.readLineSensor(4) == HIGH)
+    if (D4 == HIGH)
     {
-      delay(200);
       break;
     }
   }
