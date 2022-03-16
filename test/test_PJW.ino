@@ -35,7 +35,7 @@ int targetLine = 0;
  */
 
 // 처음 블록이 놓여있는 곳
-int startBlock[3][2] = {{1, 1}, {1, 1}, {1, 1}};
+int startBlock[3][2] = {{1, 1}, {1, 1}, {1, 1}}; // {1번줄{2층, 1층}, 2번줄{2층, 1층}, 3번줄{2층, 1층}}
 // 블록을 놓아야 하는 곳
 int endBlock[3][2] = {{0, 0}, {0, 0}, {0, 0}};
 
@@ -409,4 +409,35 @@ void Direction_move(int direc, int cnt)
     delay(300);
   }
   wheel(0, 0, 0);
+}
+
+void firstHamsu()
+{
+  if (startBlock[currentLine][1] == 0)
+  {
+  }
+  else if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
+  {
+    lift_up(/*1층높이*/); // 사실상 무쓸모 지워도 OK
+    startBlock[currentLine][1] = 0;
+  }
+  else if (startBlock[currentLine][0] == 1)
+  {
+    lift_up(/*2층높이*/);
+    startBlock[currentLine][0] = 0;
+  }
+}
+
+void secondHamsu()
+{
+  if (endBlock[targetLine][1] == 1)
+  {
+    A = 600; // 단상위 2층에 내리기 위해
+    endBlock[tartgetLine][0] = 1;
+  }
+  else if (endBlock[targetLine][1] == 0)
+  {
+    A = 600 + a; // 단상위 1층에 내리기 위해
+    endBlock[tartgetLine][1] = 1;
+  }
 }
