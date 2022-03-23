@@ -52,22 +52,20 @@ void setup()
 
 void loop()
 {
+  start();
   for (int k = 0; k < 6; k++)
   {
-    start();
     firstHamsu();
     LineTracing();
     lift_up(5800 - n);
     targetLine = ColorCheck();
     secondHamsu();
     back(1000);
-    turn();
     Direction_find(currentLine, targetLine);
     turn();
     LineTracing();
     lift_down(A);
     back(1000);
-    turn();
     lift_down(n);
     turn();
   }
@@ -104,89 +102,6 @@ void wheel(int x, int y, int z)
 
   exc1.setMotorPowers(1, A, B);
   exc2.setMotorPowers(2, C, D);
-}
-
-// 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
-void LineTracing()
-{
-  int frontSpeed = 40;
-  int analogSpeed = 4;
-  int digitalSpeed = 8;
-  int errorRange = 0;
-
-  while (1)
-  {
-    Serial.println("Line Tracing...");
-    collectSensor();
-
-    // 도착하면 정지
-    if (D3 == HIGH && D4 == HIGH)
-    {
-      wheel(0, 0, 0);
-      break;
-    }
-    // 중앙에 선이 있을 때
-    if (D2 == HIGH)
-    {
-      // 디지털 감지
-      if (D3 == HIGH && D4 == LOW)
-      {
-        // 왼쪽 회전
-        wheel(0, -frontSpeed, -digitalSpeed);
-      }
-      else if (D3 == LOW && D4 == HIGH)
-      {
-        // 오른쪽 회전
-        wheel(0, -frontSpeed, digitalSpeed);
-      }
-      // 아날로그 감지
-      else if (D3 == LOW && D4 == LOW)
-      {
-        if (a1 > a2 + errorRange)
-        {
-          // 왼쪽 회전
-          wheel(0, -frontSpeed, -analogSpeed);
-        }
-
-        else if (a1 + errorRange < a2)
-        {
-          // 오른쪽 회전
-          wheel(0, -frontSpeed, analogSpeed);
-        }
-      }
-    }
-
-    // 중앙에 선이 없을 때
-    else if (D2 == LOW)
-    {
-      // 디지털 감지
-      if (D3 == HIGH && D4 == LOW)
-      {
-        // 왼쪽 횡이동
-        wheel(digitalSpeed, -frontSpeed, 0);
-      }
-      else if (D3 == LOW && D4 == HIGH)
-      {
-        // 오른쪽 횡이동
-        wheel(-digitalSpeed, -frontSpeed, 0);
-      }
-      // 아날로그 감지
-      else if (D3 == LOW && D4 == LOW)
-      {
-        if (a1 > a2 + errorRange)
-        {
-          // 왼쪽 횡이동
-          wheel(analogSpeed, -frontSpeed, 0);
-        }
-
-        else if (a1 + errorRange < a2)
-        {
-          // 오른쪽 횡이동
-          wheel(-analogSpeed, -frontSpeed, 0);
-        }
-      }
-    }
-  }
 }
 
 // 센서 값 읽는 함수
@@ -412,6 +327,91 @@ void secondHamsu()
   }
 }
 
+/////////////////////////// 정윤 /////////////////////////////
+
+// 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
+void LineTracing()
+{
+  int frontSpeed = 40;
+  int analogSpeed = 4;
+  int digitalSpeed = 8;
+  int errorRange = 0;
+
+  while (1)
+  {
+    Serial.println("Line Tracing...");
+    collectSensor();
+
+    // 도착하면 정지
+    if (D3 == HIGH && D4 == HIGH)
+    {
+      wheel(0, 0, 0);
+      break;
+    }
+    // 중앙에 선이 있을 때
+    if (D2 == HIGH)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 회전
+        wheel(0, -frontSpeed, -digitalSpeed);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 회전
+        wheel(0, -frontSpeed, digitalSpeed);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 회전
+          wheel(0, -frontSpeed, -analogSpeed);
+        }
+
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 회전
+          wheel(0, -frontSpeed, analogSpeed);
+        }
+      }
+    }
+
+    // 중앙에 선이 없을 때
+    else if (D2 == LOW)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 횡이동
+        wheel(digitalSpeed, -frontSpeed, 0);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 횡이동
+        wheel(-digitalSpeed, -frontSpeed, 0);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 횡이동
+          wheel(analogSpeed, -frontSpeed, 0);
+        }
+
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 횡이동
+          wheel(-analogSpeed, -frontSpeed, 0);
+        }
+      }
+    }
+  }
+}
+
 // 뒤로 간다음 중간 맞춤
 void back(int time)
 {
@@ -462,3 +462,5 @@ void back(int time)
     }
   }
 }
+
+////////////////////////// 정윤 /////////////////////////
