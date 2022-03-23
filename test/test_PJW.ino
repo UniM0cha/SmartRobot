@@ -274,6 +274,7 @@ void firstHamsu()
       if (startBlock[i][1] == 1)
       {
         Direction_find(currentLine, i);
+        break;
       }
     }
   }

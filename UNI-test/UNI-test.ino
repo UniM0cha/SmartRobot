@@ -68,6 +68,7 @@ void start()
   collectSensor();
   wheel(-90, 10, -28);
   delay(1800);
+  setDiff();
   while (1)
   {
     collectSensor();
@@ -263,6 +264,7 @@ void firstHamsu()
       if (startBlock[i][1] == 1)
       {
         Direction_find(currentLine, i);
+        break;
       }
     }
   }
@@ -426,6 +428,7 @@ void back(int time)
   }
 }
 
+// 아날로그 센서값 통일
 void setDiff()
 {
   a1 = analogRead(A1);

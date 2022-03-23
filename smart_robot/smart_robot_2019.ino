@@ -168,7 +168,7 @@ void Direction_move(String direc, int cnt)
     // Serial.println(lineCurrent);
 }
 void objFind()
-{   //오브젝트 찾기
+{ //오브젝트 찾기
     //현재 라인부터 오브젝트 유무 판별
     //현재 라인에 오브젝트가 있을 경우 => Load함수
     //현재 라인에 오브젝트가 없을 경우 =>
@@ -312,8 +312,8 @@ void objLoad()
     }
     else if (objSt[lineCurrent - 1][1] == 1 && objSt[lineCurrent - 1][0] == 0)
     { //현재라인의 1층에 오브젝트가 있는가
-        // 2개 동시에 옮기는 동작일 경우 이런 상황 없음
-        //만약 하나씩 옮기는 동작이면 1층 옮기는 동작 실시
+      // 2개 동시에 옮기는 동작일 경우 이런 상황 없음
+      //만약 하나씩 옮기는 동작이면 1층 옮기는 동작 실시
     }
     else
     {
@@ -578,7 +578,7 @@ void positing()
 void centering()
 { //로봇이 라인 중앙에 맞춰 이동할 수 있게 하는 함수
     int s1 = analogRead(A1);
-    int s2 = analogRead(ghgA2);
+    int s2 = analogRead(A2);
     if (prizm.readLineSensor(5) == LOW)
     {
         wheel(-100, 0, 0); //우방
