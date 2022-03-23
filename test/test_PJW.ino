@@ -50,45 +50,34 @@ void setup()
 
 void loop()
 {
-
-  start();
-
-  LineTracing();
-  lift_up(4700);
-  Serial.println(ColorCheck());
-  //  while(1){
-  //    wheel(0, -10, 0);
-  //    if(ColorCheck() != 0)
-  //    {
-  //      targetLine = ColorCheck();
-  //      break;
-  //    }
-  //  }
-  targetLine = ColorCheck();
-  // // 뒤로가서 턴
-  wheel(0, 60, 0);
-  delay(1000);
-
-  // // 목적지 탐색
-  Direction_find(currentLine, targetLine);
-  turn();
-  LineTracing();
-  lift_down(600);
-  wheel(0, 60, 0);
-  delay(1000);
-
-  // LineTracing();
-  // LineTracingBack(1000);
-
+  for (int k = 0; k < 6; k++)
+  {
+    start();
+    firstHamsu();
+    LineTracing();
+    lift_up(5800 - n);
+    targetLine = ColorCheck();
+    secondHamsu();
+    wheel(0, 60, 0);
+    delay(1000);
+    Direction_find(currentLine, targetLine);
+    turn();
+    LineTracing();
+    lift_down(A);
+    wheel(0, 60, 0);
+    delay(1000);
+    lift_down(n);
+    turn();
+  }
   prizm.PrizmEnd();
 }
 
 // 처음 시작할 때 대각선으로 이동
 void start()
 {
-  //  collectSensor();
-  //  wheel(-90, 10, -30);
-  //  delay(2400);
+  collectSensor();
+  wheel(-90, 10, -30);
+  delay(2400);
   while (1)
   {
     collectSensor();
@@ -119,57 +108,84 @@ void wheel(int x, int y, int z)
 void LineTracing()
 {
   int frontSpeed = 40;
-  int turnSpeed = 2;
-  int errorRange = 100;
+  int analogSpeed = 4;
+  int digitalSpeed = 8;
+  int errorRange = 0;
 
   while (1)
   {
     Serial.println("Line Tracing...");
     collectSensor();
 
-    if (D3 == LOW && D4 == LOW)
+    // 도착하면 정지
+    if (D3 == HIGH && D4 == HIGH)
     {
-      // 디지털 센서로 알아내기 힘들 때 아날로그 센서 이용
-      // 오차 범위 밖의 변화가 있을 경우
-      if (a1 > a2 + errorRange)
-      {
-        // 왼쪽 앞
-        wheel(0, -frontSpeed, -turnSpeed);
-      }
-
-      else if (a1 + errorRange < a2)
-      {
-        // 오른쪽 앞
-        wheel(0, -frontSpeed, turnSpeed);
-      }
-      else
-      {
-        // 직진
-        wheel(0, -frontSpeed, 0);
-      }
-    }
-
-    else if (D3 == HIGH && D4 == LOW)
-    {
-      // 왼쪽 앞
-      wheel(0, -frontSpeed, -(turnSpeed + 5));
-    }
-
-    else if (D3 == LOW && D4 == HIGH)
-    {
-      // 오른쪽 앞
-      wheel(0, -frontSpeed, (turnSpeed + 5));
-    }
-
-    else if (D3 == HIGH && D4 == HIGH)
-    {
-      // D3, D4 감지되면 정지
       wheel(0, 0, 0);
       break;
     }
+    // 중앙에 선이 있을 때
+    if (D2 == HIGH)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 회전
+        wheel(0, -frontSpeed, -digitalSpeed);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 회전
+        wheel(0, -frontSpeed, digitalSpeed);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 회전
+          wheel(0, -frontSpeed, -analogSpeed);
+        }
+
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 회전
+          wheel(0, -frontSpeed, analogSpeed);
+        }
+      }
+    }
+
+    // 중앙에 선이 없을 때
+    else if (D2 == LOW)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 횡이동
+        wheel(digitalSpeed, -frontSpeed, 0);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 횡이동
+        wheel(-digitalSpeed, -frontSpeed, 0);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 횡이동
+          wheel(analogSpeed, -frontSpeed, 0);
+        }
+
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 횡이동
+          wheel(-analogSpeed, -frontSpeed, 0);
+        }
+      }
+    }
   }
 }
-
 void LineTracingBack(int time)
 {
   int backSpeed = 50;
@@ -358,10 +374,10 @@ void turn()
 {
   while (1)
   {
+    collectSensor();
     wheel(0, 0, 30);
-    if (prizm.readLineSensor(4) == HIGH)
+    if (D4 == HIGH)
     {
-      delay(200);
       break;
     }
   }
@@ -415,15 +431,22 @@ void firstHamsu()
 {
   if (startBlock[currentLine][1] == 0)
   {
+    for (int i = 0; i < 3; i++)
+    {
+      if (startBlock[i][1] == 1)
+      {
+        Direction_find(currentLine, i);
+      }
+    }
   }
-  else if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
+  if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
   {
-    lift_up(/*1층높이*/); // 사실상 무쓸모 지워도 OK
+    // lift_up(/*1층높이*/);    // 사실상 무쓸모 지워도 OK
     startBlock[currentLine][1] = 0;
   }
   else if (startBlock[currentLine][0] == 1)
   {
-    lift_up(/*2층높이*/);
+    lift_up(1100);
     startBlock[currentLine][0] = 0;
   }
 }
@@ -432,12 +455,12 @@ void secondHamsu()
 {
   if (endBlock[targetLine][1] == 1)
   {
-    A = 600; // 단상위 2층에 내리기 위해
-    endBlock[tartgetLine][0] = 1;
+    A = 700; // 단상위 2층에 내리기 위해
+    endBlock[targetLine][0] = 1;
   }
   else if (endBlock[targetLine][1] == 0)
   {
-    A = 600 + a; // 단상위 1층에 내리기 위해
-    endBlock[tartgetLine][1] = 1;
+    A = 1800; // 단상위 1층에 내리기 위해
+    endBlock[targetLine][1] = 1;
   }
 }
