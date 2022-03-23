@@ -55,6 +55,7 @@ void loop()
   start();
   for (int k = 0; k < 6; k++)
   {
+
     firstHamsu();
     LineTracing();
     lift_up(5800 - n);
@@ -68,7 +69,6 @@ void loop()
     back(1000);
     lift_down(n);
     turn();
-    delay(200);
   }
   prizm.PrizmEnd();
 }
@@ -79,6 +79,7 @@ void start()
   collectSensor();
   wheel(-90, 10, -28);
   delay(1800);
+  setDiff();
   while (1)
   {
     collectSensor();
@@ -183,7 +184,7 @@ int ColorCheck()
       Serial.println("RED");
       r_cr = RED;
     }
-    else if (r >= 210 && r <= 290 && g >= 525 && g <= 605 && b >= 290 && b <= 370)
+    else if (r >= 180 && r <= 260 && g >= 400 && g <= 580 && b >= 240 && b <= 360)
     {
       Serial.println("GREEN");
       r_cr = GREEN;
@@ -438,6 +439,7 @@ void back(int time)
   }
 }
 
+// 아날로그 센서값 통일
 void setDiff()
 {
   a1 = analogRead(A1);
