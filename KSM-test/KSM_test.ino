@@ -18,7 +18,7 @@ Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS347
 #define FALSE 0;
 
 // 센서값을 저장할 전역변수
-int a1, a2, D2, D3, D4, diff, A;
+int a1, a2, D2, D3, D4, diff;
 
 // 현재 리프트 높이
 int n = 0;
@@ -28,6 +28,8 @@ int n = 0;
 int currentLine = 0;
 // 목적지 줄
 int targetLine = 0;
+
+int A = 0;
 
 /**
  * 옮겨야할 오브젝트 배열 1, 2, 3라인의 1층과 2층의 유무를 정의할 변수들
@@ -58,14 +60,14 @@ void loop()
     lift_up(5800 - n);
     targetLine = ColorCheck();
     secondHamsu();
-    wheel(0, 60, 0);
-    delay(1000);
+    back(1000);
+    turn();
     Direction_find(currentLine, targetLine);
     turn();
     LineTracing();
     lift_down(A);
-    wheel(0, 60, 0);
-    delay(1000);
+    back(1000);
+    turn();
     lift_down(n);
     turn();
   }
@@ -76,12 +78,12 @@ void loop()
 void start()
 {
   collectSensor();
-  wheel(-90, 10, -30);
-  delay(2400);
+  wheel(-90, 10, -28);
+  delay(1800);
   while (1)
   {
     collectSensor();
-    wheel(-40, 0, 0);
+    wheel(-45, 0, 0);
     if (D4 == HIGH)
     {
       Serial.println("Line Found");
@@ -183,61 +185,6 @@ void LineTracing()
           wheel(-analogSpeed, -frontSpeed, 0);
         }
       }
-    }
-  }
-}
-void LineTracingBack(int time)
-{
-  int backSpeed = 50;
-  int turnSpeed = 2;
-  int errorRange = 100;
-  int start = millis();
-  int end = 0;
-
-  while (1)
-  {
-    Serial.println("Back Line Tracing...");
-    collectSensor();
-
-    end = millis();
-    if (end - start < 0)
-    {
-      wheel(0, 0, 0);
-      break;
-    }
-
-    if (D3 == LOW && D4 == LOW)
-    {
-      // 디지털 센서로 알아내기 힘들 때 아날로그 센서 이용
-      // 오차 범위 밖의 변화가 있을 경우
-      if (a1 > a2 + errorRange)
-      {
-        // 왼쪽 앞
-        wheel(0, backSpeed, turnSpeed);
-      }
-
-      else if (a1 + errorRange < a2)
-      {
-        // 오른쪽 앞
-        wheel(0, backSpeed, -turnSpeed);
-      }
-      else
-      {
-        // 직진
-        wheel(0, backSpeed, 0);
-      }
-    }
-
-    else if (D3 == HIGH && D4 == LOW)
-    {
-      // 왼쪽 앞
-      wheel(0, backSpeed, (turnSpeed + 5));
-    }
-
-    else if (D3 == LOW && D4 == HIGH)
-    {
-      // 오른쪽 앞
-      wheel(0, backSpeed, -(turnSpeed + 5));
     }
   }
 }
@@ -462,5 +409,56 @@ void secondHamsu()
   {
     A = 1800; // 단상위 1층에 내리기 위해
     endBlock[targetLine][1] = 1;
+  }
+}
+
+// 뒤로 간다음 중간 맞춤
+void back(int time)
+{
+  int frontSpeed = 0;
+  int analogSpeed = 30;
+  int digitalSpeed = 40;
+  int errorRange = 40;
+
+  wheel(0, 50, 0);
+  delay(time);
+
+  while (1)
+  {
+    collectSensor();
+    if (D2 == LOW)
+    {
+      // 디지털 감지
+      if (D3 == HIGH && D4 == LOW)
+      {
+        // 왼쪽 횡이동
+        wheel(digitalSpeed, -frontSpeed, 0);
+      }
+      else if (D3 == LOW && D4 == HIGH)
+      {
+        // 오른쪽 횡이동
+        wheel(-digitalSpeed, -frontSpeed, 0);
+      }
+      // 아날로그 감지
+      else if (D3 == LOW && D4 == LOW)
+      {
+        if (a1 > a2 + errorRange)
+        {
+          // 왼쪽 횡이동
+          wheel(analogSpeed, -frontSpeed, 0);
+        }
+
+        else if (a1 + errorRange < a2)
+        {
+          // 오른쪽 횡이동
+          wheel(-analogSpeed, -frontSpeed, 0);
+        }
+      }
+    }
+    else if (D2 == HIGH)
+    {
+      wheel(0, 0, 0);
+      break;
+    }
   }
 }
