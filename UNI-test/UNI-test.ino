@@ -29,13 +29,15 @@ int currentLine = 0;
 // 목적지 줄
 int targetLine = 0;
 
+int A = 0;
+
 /**
  * 옮겨야할 오브젝트 배열 1, 2, 3라인의 1층과 2층의 유무를 정의할 변수들
  * 0 : 없음(FALSE), 1 : 있음(TRUE) 으로 정의
  */
 
 // 처음 블록이 놓여있는 곳
-int startBlock[3][2] = {{1, 1}, {1, 1}, {1, 1}};
+int startBlock[3][2] = {{1, 1}, {1, 1}, {1, 1}}; // {1번줄{2층, 1층}, 2번줄{2층, 1층}, 3번줄{2층, 1층}}
 // 블록을 놓아야 하는 곳
 int endBlock[3][2] = {{0, 0}, {0, 0}, {0, 0}};
 
@@ -50,27 +52,8 @@ void setup()
 
 void loop()
 {
-  // start();
-
-  // LineTracing();
-  // lift_up(4700);
-  // Serial.println(ColorCheck());
-  // targetLine = ColorCheck();
-
-  // // 뒤로가서 턴
-  // wheel(0, 60, 0);
-  // delay(1000);
-
-  // // 목적지 탐색
-  // Direction_find(currentLine, targetLine);
-  // turn();
-  // LineTracing();
-  // lift_down(400);
-  // wheel(0, 60, 0);
-  // delay(1000);
-
   findRightLine();
-  for (int i = 0; i < 10; i++)
+  for (int k = 0; k < 6; k++)
   {
     LineTracing();
     back(1000);
@@ -85,6 +68,7 @@ void start()
   collectSensor();
   wheel(-90, 10, -28);
   delay(1800);
+  setDiff();
   while (1)
   {
     collectSensor();
@@ -111,12 +95,211 @@ void wheel(int x, int y, int z)
   exc2.setMotorPowers(2, C, D);
 }
 
+void findRightLine()
+{
+  Serial.println("Find Right Line...");
+  while (1)
+  {
+    collectSensor();
+    wheel(-45, 0, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      currentLine++;
+      break;
+    }
+  }
+}
+
+void findLeftLine()
+{
+  Serial.println("Find Left Line...");
+  while (1)
+  {
+    collectSensor();
+    wheel(45, 0, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      currentLine--;
+      break;
+    }
+  }
+}
+
+void lift_up(int s)
+{ //리프트 up 함수
+  n += s;
+  prizm.setMotorSpeed(1, -300);
+  delay(s);
+  prizm.setMotorSpeed(1, 0);
+}
+
+void lift_down(int s)
+{ //리프트 down 함수
+  n -= s;
+  prizm.setMotorSpeed(1, 300);
+  delay(s);
+  prizm.setMotorSpeed(1, 0);
+}
+
+int ColorCheck()
+{
+  uint16_t r, g, b, c;
+  tcs.getRawData(&r, &g, &b, &c);
+  int r_cr;
+  Serial.print("r : ");
+  Serial.print(r);
+  Serial.print(", g : ");
+  Serial.print(g);
+  Serial.print(", b : ");
+  Serial.print(b);
+  Serial.print(", c : ");
+  Serial.print(c);
+  Serial.println();
+  if (c > 3500)
+  {
+    Serial.println("color 인식 error");
+    tcs.setInterrupt(true);
+    r_cr = 4;
+  }
+  else
+  {
+    tcs.setInterrupt(false);
+    if (r >= 525 && r <= 605 && g >= 245 && g <= 325 && b >= 230 && b <= 310)
+    {
+      Serial.println("RED");
+      r_cr = RED;
+    }
+    else if (r >= 210 && r <= 290 && g >= 525 && g <= 605 && b >= 290 && b <= 370)
+    {
+      Serial.println("GREEN");
+      r_cr = GREEN;
+    }
+    else if (r >= 120 && r <= 200 && g >= 275 && g <= 355 && b >= 425 && b <= 505)
+    {
+      Serial.println("BLUE");
+      r_cr = BLUE;
+    }
+    else if (r >= 1100 && r <= 1360 && g >= 1130 && g <= 1400 && b >= 550 && b <= 670)
+    {
+      Serial.println("YELLOW");
+      r_cr = 3;
+    }
+    else
+    {
+      r_cr = 0;
+    }
+  }
+  return r_cr;
+}
+
+void turn()
+{
+  wheel(0, 0, 40);
+  delay(500);
+  while (1)
+  {
+    collectSensor();
+    if (a2 - 500 >= a1)
+    {
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}
+
+void Direction_find(int now_line, int next)
+{                                    //목적지 라인 찾기
+  int destination = now_line - next; //음수면 오른쪽, 양수면 왼쪽
+  int cnt = abs(destination);        //라인 이동 횟수
+  int direc = 0;
+
+  if (destination < 0)
+  {
+    direc = RIGHT;
+  }
+  else if (destination > 0)
+  {
+    direc = LEFT;
+  }
+  else
+  {
+    direc = STOP;
+  }
+  Serial.println(direc);
+  Serial.println(cnt);
+  Direction_move(direc, cnt); //목적지 라인으로 이동
+}
+
+void Direction_move(int direc, int cnt)
+{ //목적지 라인으로 이동하는 함수
+  for (int i = 0; i < cnt; i++)
+  { //이동 횟수에 따른 반복문
+    if (direc == 1)
+    {
+      findRightLine();
+    }
+    else if (direc == -1)
+    {
+      findLeftLine();
+    }
+    else
+    {
+      wheel(0, 0, 0);
+    }
+    delay(300);
+  }
+  wheel(0, 0, 0);
+}
+
+void firstHamsu()
+{
+  if (startBlock[currentLine][1] == 0)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      if (startBlock[i][1] == 1)
+      {
+        Direction_find(currentLine, i);
+        break;
+      }
+    }
+  }
+  if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
+  {
+    // lift_up(/*1층높이*/);    // 사실상 무쓸모 지워도 OK
+    startBlock[currentLine][1] = 0;
+  }
+  else if (startBlock[currentLine][0] == 1)
+  {
+    lift_up(1100);
+    startBlock[currentLine][0] = 0;
+  }
+}
+
+void secondHamsu()
+{
+  if (endBlock[targetLine][1] == 1)
+  {
+    A = 700; // 단상위 2층에 내리기 위해
+    endBlock[targetLine][0] = 1;
+  }
+  else if (endBlock[targetLine][1] == 0)
+  {
+    A = 1800; // 단상위 1층에 내리기 위해
+    endBlock[targetLine][1] = 1;
+  }
+}
+
+/////////////////////////// 정윤 /////////////////////////////
+
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
   int frontSpeed = 40;
-  int analogSpeed = 4;
-  int digitalSpeed = 8;
   int errorRange = 0;
 
   while (1)
@@ -137,12 +320,12 @@ void LineTracing()
       if (D3 == HIGH && D4 == LOW)
       {
         // 왼쪽 회전
-        wheel(0, -frontSpeed, -digitalSpeed);
+        wheel(0, -frontSpeed, -5);
       }
       else if (D3 == LOW && D4 == HIGH)
       {
         // 오른쪽 회전
-        wheel(0, -frontSpeed, digitalSpeed);
+        wheel(0, -frontSpeed, 5);
       }
       // 아날로그 감지
       else if (D3 == LOW && D4 == LOW)
@@ -150,13 +333,13 @@ void LineTracing()
         if (a1 > a2 + errorRange)
         {
           // 왼쪽 회전
-          wheel(0, -frontSpeed, -analogSpeed);
+          wheel(0, -frontSpeed, -4);
         }
 
         else if (a1 + errorRange < a2)
         {
           // 오른쪽 회전
-          wheel(0, -frontSpeed, analogSpeed);
+          wheel(0, -frontSpeed, 4);
         }
       }
     }
@@ -168,12 +351,12 @@ void LineTracing()
       if (D3 == HIGH && D4 == LOW)
       {
         // 왼쪽 횡이동
-        wheel(digitalSpeed, -frontSpeed, 0);
+        wheel(5, -frontSpeed, -5);
       }
       else if (D3 == LOW && D4 == HIGH)
       {
         // 오른쪽 횡이동
-        wheel(-digitalSpeed, -frontSpeed, 0);
+        wheel(-5, -frontSpeed, 5);
       }
       // 아날로그 감지
       else if (D3 == LOW && D4 == LOW)
@@ -181,13 +364,13 @@ void LineTracing()
         if (a1 > a2 + errorRange)
         {
           // 왼쪽 횡이동
-          wheel(analogSpeed, -frontSpeed, 0);
+          wheel(4, -frontSpeed, -4);
         }
 
         else if (a1 + errorRange < a2)
         {
           // 오른쪽 횡이동
-          wheel(-analogSpeed, -frontSpeed, 0);
+          wheel(-4, -frontSpeed, 4);
         }
       }
     }
@@ -245,6 +428,14 @@ void back(int time)
   }
 }
 
+// 아날로그 센서값 통일
+void setDiff()
+{
+  a1 = analogRead(A1);
+  a2 = analogRead(A2);
+  diff = a2 - a1;
+}
+
 // 센서 값 읽는 함수
 void collectSensor()
 {
@@ -265,163 +456,4 @@ void collectSensor()
   Serial.println(D4);
 }
 
-void findRightLine()
-{
-  Serial.println("Find Right Line...");
-  while (1)
-  {
-    collectSensor();
-    wheel(-45, 0, 0);
-    if (D4 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      currentLine++;
-      break;
-    }
-  }
-}
-
-void findLeftLine()
-{
-  Serial.println("Find Left Line...");
-  while (1)
-  {
-    collectSensor();
-    wheel(45, 0, 0);
-    if (D3 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      currentLine--;
-      break;
-    }
-  }
-}
-
-void setDiff()
-{
-  a1 = analogRead(A1);
-  a2 = analogRead(A2);
-  diff = a2 - a1;
-}
-
-void lift_up(int s)
-{ //리프트 up 함수
-  n += s;
-  prizm.setMotorSpeed(1, -300);
-  delay(s);
-  prizm.setMotorSpeed(1, 0);
-}
-
-void lift_down(int s)
-{ //리프트 down 함수
-  n -= s;
-  prizm.setMotorSpeed(1, 300);
-  delay(s);
-  prizm.setMotorSpeed(1, 0);
-}
-
-int ColorCheck()
-{
-  uint16_t r, g, b, c;
-  tcs.getRawData(&r, &g, &b, &c);
-  int r_cr;
-  Serial.print("r : ");
-  Serial.print(r);
-  Serial.print(", g : ");
-  Serial.print(g);
-  Serial.print(", b : ");
-  Serial.print(b);
-  Serial.print(", c : ");
-  Serial.print(c);
-  Serial.println();
-  if (c > 3000)
-  {
-    Serial.println("color 인식 error");
-    tcs.setInterrupt(true);
-    r_cr = 4;
-  }
-  else
-  {
-    tcs.setInterrupt(false);
-    if (r >= 440 && r <= 500 && g >= 220 && g <= 280 && b >= 200 && b <= 260)
-    {
-      Serial.println("RED");
-      r_cr = RED;
-    }
-    else if (r >= 180 && r <= 240 && g >= 430 && g <= 490 && b >= 240 && b <= 300)
-    {
-      Serial.println("GREEN");
-      r_cr = GREEN;
-    }
-    else if (r >= 100 && r <= 160 && g >= 230 && g <= 290 && b >= 350 && b <= 410)
-    {
-      Serial.println("BLUE");
-      r_cr = BLUE;
-    }
-    else if (r >= 800 && r <= 940 && g >= 810 && g <= 950 && b >= 370 && b <= 510)
-    {
-      Serial.println("YELLOW");
-      r_cr = 3;
-    }
-  }
-  return r_cr;
-}
-
-void turn()
-{
-  while (1)
-  {
-    collectSensor();
-    wheel(0, 0, 30);
-    if (D4 == HIGH)
-    {
-      break;
-    }
-  }
-}
-
-void Direction_find(int now_line, int next)
-{                                    //목적지 라인 찾기
-  int destination = now_line - next; //음수면 오른쪽, 양수면 왼쪽
-  int cnt = abs(destination);        //라인 이동 횟수
-  int direc = 0;
-
-  if (destination < 0)
-  {
-    direc = RIGHT;
-  }
-  else if (destination > 0)
-  {
-    direc = LEFT;
-  }
-  else
-  {
-    direc = STOP;
-  }
-  Serial.println(direc);
-  Serial.println(cnt);
-  Direction_move(direc, cnt); //목적지 라인으로 이동
-}
-
-void Direction_move(int direc, int cnt)
-{ //목적지 라인으로 이동하는 함수
-  for (int i = 0; i < cnt; i++)
-  { //이동 횟수에 따른 반복문
-    if (direc == 1)
-    {
-      findRightLine();
-    }
-    else if (direc == -1)
-    {
-      findLeftLine();
-    }
-    else
-    {
-      wheel(0, 0, 0);
-    }
-    delay(300);
-  }
-  wheel(0, 0, 0);
-}
+////////////////////////// 정윤 /////////////////////////
