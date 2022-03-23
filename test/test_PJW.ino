@@ -68,6 +68,7 @@ void loop()
     back(1000);
     lift_down(n);
     turn();
+    delay(200);
   }
   prizm.PrizmEnd();
 }
@@ -104,26 +105,6 @@ void wheel(int x, int y, int z)
   exc2.setMotorPowers(2, C, D);
 }
 
-// 센서 값 읽는 함수
-void collectSensor()
-{
-  a1 = analogRead(A1) + diff;
-  a2 = analogRead(A2);
-  D2 = prizm.readLineSensor(2);
-  D3 = prizm.readLineSensor(3);
-  D4 = prizm.readLineSensor(4);
-  Serial.print("A1: ");
-  Serial.print(a1);
-  Serial.print(" / A2: ");
-  Serial.print(a2);
-  Serial.print(" / D2: ");
-  Serial.print(D2);
-  Serial.print(" / D3: ");
-  Serial.print(D3);
-  Serial.print(" / D4: ");
-  Serial.println(D4);
-}
-
 void findRightLine()
 {
   Serial.println("Find Right Line...");
@@ -156,13 +137,6 @@ void findLeftLine()
       break;
     }
   }
-}
-
-void setDiff()
-{
-  a1 = analogRead(A1);
-  a2 = analogRead(A2);
-  diff = a2 - a1;
 }
 
 void lift_up(int s)
@@ -234,12 +208,14 @@ int ColorCheck()
 
 void turn()
 {
+  wheel(0, 0, 40);
+  delay(500);
   while (1)
   {
     collectSensor();
-    wheel(0, 0, 30);
-    if (D4 == HIGH)
+    if (a2 - 500 >= a1)
     {
+      wheel(0, 0, 0);
       break;
     }
   }
@@ -333,8 +309,6 @@ void secondHamsu()
 void LineTracing()
 {
   int frontSpeed = 40;
-  int analogSpeed = 4;
-  int digitalSpeed = 8;
   int errorRange = 0;
 
   while (1)
@@ -355,12 +329,12 @@ void LineTracing()
       if (D3 == HIGH && D4 == LOW)
       {
         // 왼쪽 회전
-        wheel(0, -frontSpeed, -digitalSpeed);
+        wheel(0, -frontSpeed, -5);
       }
       else if (D3 == LOW && D4 == HIGH)
       {
         // 오른쪽 회전
-        wheel(0, -frontSpeed, digitalSpeed);
+        wheel(0, -frontSpeed, 5);
       }
       // 아날로그 감지
       else if (D3 == LOW && D4 == LOW)
@@ -368,13 +342,13 @@ void LineTracing()
         if (a1 > a2 + errorRange)
         {
           // 왼쪽 회전
-          wheel(0, -frontSpeed, -analogSpeed);
+          wheel(0, -frontSpeed, -4);
         }
 
         else if (a1 + errorRange < a2)
         {
           // 오른쪽 회전
-          wheel(0, -frontSpeed, analogSpeed);
+          wheel(0, -frontSpeed, 4);
         }
       }
     }
@@ -386,12 +360,12 @@ void LineTracing()
       if (D3 == HIGH && D4 == LOW)
       {
         // 왼쪽 횡이동
-        wheel(digitalSpeed, -frontSpeed, 0);
+        wheel(5, -frontSpeed, -5);
       }
       else if (D3 == LOW && D4 == HIGH)
       {
         // 오른쪽 횡이동
-        wheel(-digitalSpeed, -frontSpeed, 0);
+        wheel(-5, -frontSpeed, 5);
       }
       // 아날로그 감지
       else if (D3 == LOW && D4 == LOW)
@@ -399,13 +373,13 @@ void LineTracing()
         if (a1 > a2 + errorRange)
         {
           // 왼쪽 횡이동
-          wheel(analogSpeed, -frontSpeed, 0);
+          wheel(4, -frontSpeed, -4);
         }
 
         else if (a1 + errorRange < a2)
         {
           // 오른쪽 횡이동
-          wheel(-analogSpeed, -frontSpeed, 0);
+          wheel(-4, -frontSpeed, 4);
         }
       }
     }
@@ -461,6 +435,33 @@ void back(int time)
       break;
     }
   }
+}
+
+void setDiff()
+{
+  a1 = analogRead(A1);
+  a2 = analogRead(A2);
+  diff = a2 - a1;
+}
+
+// 센서 값 읽는 함수
+void collectSensor()
+{
+  a1 = analogRead(A1) + diff;
+  a2 = analogRead(A2);
+  D2 = prizm.readLineSensor(2);
+  D3 = prizm.readLineSensor(3);
+  D4 = prizm.readLineSensor(4);
+  Serial.print("A1: ");
+  Serial.print(a1);
+  Serial.print(" / A2: ");
+  Serial.print(a2);
+  Serial.print(" / D2: ");
+  Serial.print(D2);
+  Serial.print(" / D3: ");
+  Serial.print(D3);
+  Serial.print(" / D4: ");
+  Serial.println(D4);
 }
 
 ////////////////////////// 정윤 /////////////////////////
