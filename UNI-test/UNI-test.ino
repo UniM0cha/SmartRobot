@@ -52,33 +52,22 @@ void setup()
 
 void loop()
 {
-  // findRightLine();
+  findRightLine();
+  for (int k = 0; k < 6; k++)
+  {
+    LineTracing();
+    back(1000);
+    turn();
+  }
+
+  /////////////////////////////////////////////
+  // start();
   // for (int k = 0; k < 6; k++)
   // {
   //   LineTracing();
   //   back(1000);
   //   turn();
   // }
-
-  /////////////////////////////////////////////
-  start();
-  for (int k = 0; k < 6; k++)
-  {
-
-    firstHamsu();
-    LineTracing();
-    lift_up(5800 - n);
-    targetLine = ColorCheck();
-    secondHamsu();
-    back(1000);
-    Direction_find(currentLine, targetLine);
-    turn();
-    LineTracing();
-    lift_down(A);
-    back(1000);
-    lift_down(n);
-    turn();
-  }
   ////////////////////////////////////////////
   prizm.PrizmEnd();
 }
@@ -402,16 +391,6 @@ void turn()
   wheel(0, 0, 40);
   delay(1200);
   wheel(0, 0, 25);
-  // while (1)
-  // {
-  //   collectSensor();
-  //   // D4가 감지되면 속도 감소
-  //   if (D4 == HIGH)
-  //   {
-  //     wheel(0, 0, 20);
-  //     break;
-  //   }
-  // }
   while (1)
   {
     collectSensor();
