@@ -264,8 +264,13 @@ void Direction_move(int direc, int cnt)
 
 void firstHamsu()
 {
+  // 현재 서있는 라인에 블럭이 없을 때
   if (startBlock[currentLine][1] == 0)
   {
+    // TODO : 1번 줄이면 2번, 3번 차례로 봄
+    // TODO : 2번 줄이면 1번, 3번 차례로 봄
+    // TODO : 3번 줄이면 2번, 1번 차례로 봄
+    // 지금 코드는 그냥 0,1,2 가는거네?
     for (int i = 0; i < 3; i++)
     {
       if (startBlock[i][1] == 1)
@@ -275,13 +280,19 @@ void firstHamsu()
       }
     }
   }
-  if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
+
+  // 현재 서있는 라인의 1층에만 블럭이 있을 때
+  else if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
   {
+    // TODO : 1층 높이로 맞춘 후 가지러 가야함
     // lift_up(/*1층높이*/);    // 사실상 무쓸모 지워도 OK
     startBlock[currentLine][1] = 0;
   }
+
+  // 현재 서있는 라인의 2층에 블럭이 있을 때
   else if (startBlock[currentLine][0] == 1)
   {
+    // TODO : 2층 높이로 맞춘 후 가지러 가야함
     lift_up(1100);
     startBlock[currentLine][0] = 0;
   }
