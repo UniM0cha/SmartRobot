@@ -52,24 +52,47 @@ void setup()
 
 void loop()
 {
-  start();
-  for (int k = 0; k < 6; k++)
-  {
+  // start();
+  // for (int k = 0; k < 6; k++)
+  // {
 
-    firstHamsu();
-    LineTracing();
-    lift_up(5800 - n);
-    targetLine = ColorCheck();
-    secondHamsu();
-    back(1000);
-    Direction_find(currentLine, targetLine);
-    turn();
-    LineTracing();
-    lift_down(A);
-    back(1000);
-    lift_down(n);
-    turn();
+  //   firstHamsu();
+  //   LineTracing();
+  //   lift_up(5800 - n);
+  //   targetLine = ColorCheck();
+  //   secondHamsu();
+  //   back(1000);
+  //   Direction_find(currentLine, targetLine);
+  //   turn();
+  //   LineTracing();
+  //   lift_down(A);
+  //   back(1000);
+  //   lift_down(n);
+  //   turn();
+  // }
+  // Yellow //
+  Direction_find(currentLine, 2);
+  LineTracing();
+  secondstart();
+  lift_up(4000);
+  LineTracing();
+  lift_up(1700);
+  while (1)
+  {
+    wheel(-60, 30, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
   }
+  LineTracing();
+  lift_down(700);
+  back(1000);
+  lift_down(1000);
+  LineTracing();
+  lift_up(1700);
   prizm.PrizmEnd();
   // Serial.println(ColorCheck());
 }
@@ -311,8 +334,6 @@ void secondHamsu()
   }
 }
 
-/////////////////////////// 정윤 /////////////////////////////
-
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
@@ -463,4 +484,21 @@ void collectSensor()
   Serial.println(D4);
 }
 
-////////////////////////// 정윤 /////////////////////////
+void secondstart()
+{
+  collectSensor();
+  wheel(-90, -10, 28);
+  delay(1700);
+  setDiff();
+  while (1)
+  {
+    collectSensor();
+    wheel(45, 0, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}
