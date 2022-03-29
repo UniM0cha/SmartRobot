@@ -71,6 +71,7 @@ void loop()
     turn();
   }
   prizm.PrizmEnd();
+  // Serial.println(ColorCheck());
 }
 
 // 처음 시작할 때 대각선으로 이동
@@ -78,7 +79,7 @@ void start()
 {
   collectSensor();
   wheel(-90, 10, -28);
-  delay(1800);
+  delay(1700);
   setDiff();
   while (1)
   {
@@ -201,25 +202,30 @@ int ColorCheck()
     }
     else
     {
-      r_cr = 0;
+      r_cr = 4;
     }
   }
   return r_cr;
 }
 
+// 뒤로 돌아서 중간 맞추는 함수
 void turn()
 {
+  // 처음엔 빠른 속도로 돌다가
   wheel(0, 0, 40);
-  delay(500);
+  delay(1200);
+  wheel(0, 0, 25);
   while (1)
   {
     collectSensor();
-    if (a2 - 500 >= a1)
+    // 그 후 아날로그 센서 사용
+    if (a2 - 600 >= a1)
     {
       wheel(0, 0, 0);
       break;
     }
   }
+  center();
 }
 
 void Direction_find(int now_line, int next)
@@ -310,10 +316,10 @@ void secondHamsu()
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
-  int frontSpeed = 40;
+  int frontSpeed = 50;
   int errorRange = 0;
 
-  while (1)
+  while (true)
   {
     Serial.println("Line Tracing...");
     collectSensor();
@@ -344,13 +350,13 @@ void LineTracing()
         if (a1 > a2 + errorRange)
         {
           // 왼쪽 회전
-          wheel(0, -frontSpeed, -4);
+          wheel(0, -frontSpeed, -3);
         }
 
         else if (a1 + errorRange < a2)
         {
           // 오른쪽 회전
-          wheel(0, -frontSpeed, 4);
+          wheel(0, -frontSpeed, 3);
         }
       }
     }
@@ -361,12 +367,12 @@ void LineTracing()
       // 디지털 감지
       if (D3 == HIGH && D4 == LOW)
       {
-        // 왼쪽 횡이동
+        // 왼쪽 횡이동 & 왼쪽 회전
         wheel(5, -frontSpeed, -5);
       }
       else if (D3 == LOW && D4 == HIGH)
       {
-        // 오른쪽 횡이동
+        // 오른쪽 횡이동 & 오른쪽 회전
         wheel(-5, -frontSpeed, 5);
       }
       // 아날로그 감지
@@ -374,77 +380,67 @@ void LineTracing()
       {
         if (a1 > a2 + errorRange)
         {
-          // 왼쪽 횡이동
-          wheel(4, -frontSpeed, -4);
+          // 왼쪽 횡이동 & 왼족 회전
+          wheel(5, -frontSpeed, -3);
         }
 
         else if (a1 + errorRange < a2)
         {
-          // 오른쪽 횡이동
-          wheel(-4, -frontSpeed, 4);
+          // 오른쪽 횡이동 & 오른쪽 회전
+          wheel(-5, -frontSpeed, 3);
         }
       }
     }
   }
 }
-
 // 뒤로 간다음 중간 맞춤
 void back(int time)
 {
-  int frontSpeed = 0;
-  int analogSpeed = 30;
-  int digitalSpeed = 40;
-  int errorRange = 40;
-
   wheel(0, 50, 0);
   delay(time);
-
-  while (1)
-  {
-    collectSensor();
-    if (D2 == LOW)
-    {
-      // 디지털 감지
-      if (D3 == HIGH && D4 == LOW)
-      {
-        // 왼쪽 횡이동
-        wheel(digitalSpeed, -frontSpeed, 0);
-      }
-      else if (D3 == LOW && D4 == HIGH)
-      {
-        // 오른쪽 횡이동
-        wheel(-digitalSpeed, -frontSpeed, 0);
-      }
-      // 아날로그 감지
-      else if (D3 == LOW && D4 == LOW)
-      {
-        if (a1 > a2 + errorRange)
-        {
-          // 왼쪽 횡이동
-          wheel(analogSpeed, -frontSpeed, 0);
-        }
-
-        else if (a1 + errorRange < a2)
-        {
-          // 오른쪽 횡이동
-          wheel(-analogSpeed, -frontSpeed, 0);
-        }
-      }
-    }
-    else if (D2 == HIGH)
-    {
-      wheel(0, 0, 0);
-      break;
-    }
-  }
+  center();
 }
-
 // 아날로그 센서값 통일
 void setDiff()
 {
   a1 = analogRead(A1);
   a2 = analogRead(A2);
   diff = a2 - a1;
+}
+
+// 가운데를 맞추기 위해 '횡이동'만 하는 코드
+void center()
+{
+  int frontSpeed = 0;
+  int analogSpeed = 30;
+  int digitalSpeed = 40;
+  int errorRange = 50;
+
+  while (1)
+  {
+    collectSensor();
+    // 가운데가 아닐 때
+    if (D2 == LOW)
+    {
+      if (a1 > a2 + errorRange)
+      {
+        // 왼쪽 횡이동
+        wheel(analogSpeed, -frontSpeed, 0);
+      }
+
+      else if (a1 + errorRange < a2)
+      {
+        // 오른쪽 횡이동
+        wheel(-analogSpeed, -frontSpeed, 0);
+      }
+    }
+    // 가운데가 맞춰졌을 때
+    else if (D2 == HIGH)
+    {
+      wheel(0, 0, 0);
+      break;
+    }
+  }
 }
 
 // 센서 값 읽는 함수
