@@ -59,6 +59,16 @@ void loop()
     back(1000);
     turn();
   }
+
+  /////////////////////////////////////////////
+  // start();
+  // for (int k = 0; k < 6; k++)
+  // {
+  //   LineTracing();
+  //   back(1000);
+  //   turn();
+  // }
+  ////////////////////////////////////////////
   prizm.PrizmEnd();
 }
 
@@ -173,12 +183,12 @@ int ColorCheck()
       Serial.println("RED");
       r_cr = RED;
     }
-    else if (r >= 210 && r <= 290 && g >= 525 && g <= 605 && b >= 290 && b <= 370)
+    else if (r >= 180 && r <= 260 && g >= 400 && g <= 580 && b >= 240 && b <= 360)
     {
       Serial.println("GREEN");
       r_cr = GREEN;
     }
-    else if (r >= 120 && r <= 200 && g >= 275 && g <= 355 && b >= 425 && b <= 505)
+    else if (r >= 120 && r <= 200 && g >= 275 && g <= 355 && b >= 370 && b <= 505)
     {
       Serial.println("BLUE");
       r_cr = BLUE;
@@ -194,21 +204,6 @@ int ColorCheck()
     }
   }
   return r_cr;
-}
-
-void turn()
-{
-  wheel(0, 0, 40);
-  delay(500);
-  while (1)
-  {
-    collectSensor();
-    if (a2 - 500 >= a1)
-    {
-      wheel(0, 0, 0);
-      break;
-    }
-  }
 }
 
 void Direction_find(int now_line, int next)
@@ -253,12 +248,18 @@ void Direction_move(int direc, int cnt)
     delay(300);
   }
   wheel(0, 0, 0);
+  center();
 }
 
 void firstHamsu()
 {
+  // 현재 서있는 라인에 블럭이 없을 때
   if (startBlock[currentLine][1] == 0)
   {
+    // TODO : 1번 줄이면 2번, 3번 차례로 봄
+    // TODO : 2번 줄이면 1번, 3번 차례로 봄
+    // TODO : 3번 줄이면 2번, 1번 차례로 봄
+    // 지금 코드는 그냥 0,1,2 가는거네?
     for (int i = 0; i < 3; i++)
     {
       if (startBlock[i][1] == 1)
@@ -268,13 +269,19 @@ void firstHamsu()
       }
     }
   }
-  if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
+
+  // 현재 서있는 라인의 1층에만 블럭이 있을 때
+  else if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
   {
+    // TODO : 1층 높이로 맞춘 후 가지러 가야함
     // lift_up(/*1층높이*/);    // 사실상 무쓸모 지워도 OK
     startBlock[currentLine][1] = 0;
   }
+
+  // 현재 서있는 라인의 2층에 블럭이 있을 때
   else if (startBlock[currentLine][0] == 1)
   {
+    // TODO : 2층 높이로 맞춘 후 가지러 가야함
     lift_up(1100);
     startBlock[currentLine][0] = 0;
   }
@@ -299,10 +306,10 @@ void secondHamsu()
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
-  int frontSpeed = 40;
+  int frontSpeed = 50;
   int errorRange = 0;
 
-  while (1)
+  while (true)
   {
     Serial.println("Line Tracing...");
     collectSensor();
@@ -333,13 +340,13 @@ void LineTracing()
         if (a1 > a2 + errorRange)
         {
           // 왼쪽 회전
-          wheel(0, -frontSpeed, -4);
+          wheel(0, -frontSpeed, -3);
         }
 
         else if (a1 + errorRange < a2)
         {
           // 오른쪽 회전
-          wheel(0, -frontSpeed, 4);
+          wheel(0, -frontSpeed, 3);
         }
       }
     }
@@ -350,12 +357,12 @@ void LineTracing()
       // 디지털 감지
       if (D3 == HIGH && D4 == LOW)
       {
-        // 왼쪽 횡이동
+        // 왼쪽 횡이동 & 왼쪽 회전
         wheel(5, -frontSpeed, -5);
       }
       else if (D3 == LOW && D4 == HIGH)
       {
-        // 오른쪽 횡이동
+        // 오른쪽 횡이동 & 오른쪽 회전
         wheel(-5, -frontSpeed, 5);
       }
       // 아날로그 감지
@@ -363,63 +370,75 @@ void LineTracing()
       {
         if (a1 > a2 + errorRange)
         {
-          // 왼쪽 횡이동
-          wheel(4, -frontSpeed, -4);
+          // 왼쪽 횡이동 & 왼족 회전
+          wheel(5, -frontSpeed, -3);
         }
 
         else if (a1 + errorRange < a2)
         {
-          // 오른쪽 횡이동
-          wheel(-4, -frontSpeed, 4);
+          // 오른쪽 횡이동 & 오른쪽 회전
+          wheel(-5, -frontSpeed, 3);
         }
       }
     }
   }
 }
 
+// 뒤로 돌아서 중간 맞추는 함수
+void turn()
+{
+  // 처음엔 빠른 속도로 돌다가
+  wheel(0, 0, 40);
+  delay(1200);
+  wheel(0, 0, 25);
+  while (1)
+  {
+    collectSensor();
+    // 그 후 아날로그 센서 사용
+    if (a2 - 600 >= a1)
+    {
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+  center();
+}
+
 // 뒤로 간다음 중간 맞춤
 void back(int time)
+{
+  wheel(0, 50, 0);
+  delay(time);
+  center();
+}
+
+// 가운데를 맞추기 위해 '횡이동'만 하는 코드
+void center()
 {
   int frontSpeed = 0;
   int analogSpeed = 30;
   int digitalSpeed = 40;
-  int errorRange = 40;
-
-  wheel(0, 50, 0);
-  delay(time);
+  int errorRange = 50;
 
   while (1)
   {
     collectSensor();
+    // 가운데가 아닐 때
     if (D2 == LOW)
     {
-      // 디지털 감지
-      if (D3 == HIGH && D4 == LOW)
+      if (a1 > a2 + errorRange)
       {
         // 왼쪽 횡이동
-        wheel(digitalSpeed, -frontSpeed, 0);
+        wheel(analogSpeed, -frontSpeed, 0);
       }
-      else if (D3 == LOW && D4 == HIGH)
+
+      else if (a1 + errorRange < a2)
       {
         // 오른쪽 횡이동
-        wheel(-digitalSpeed, -frontSpeed, 0);
-      }
-      // 아날로그 감지
-      else if (D3 == LOW && D4 == LOW)
-      {
-        if (a1 > a2 + errorRange)
-        {
-          // 왼쪽 횡이동
-          wheel(analogSpeed, -frontSpeed, 0);
-        }
-
-        else if (a1 + errorRange < a2)
-        {
-          // 오른쪽 횡이동
-          wheel(-analogSpeed, -frontSpeed, 0);
-        }
+        wheel(-analogSpeed, -frontSpeed, 0);
       }
     }
+    // 가운데가 맞춰졌을 때
     else if (D2 == HIGH)
     {
       wheel(0, 0, 0);
@@ -428,7 +447,7 @@ void back(int time)
   }
 }
 
-// 아날로그 센서값 통일
+// 아날로그 좌우 센서값 통일
 void setDiff()
 {
   a1 = analogRead(A1);
