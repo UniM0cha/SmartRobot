@@ -209,7 +209,7 @@ int ColorCheck()
 
 void turn()
 {
-  wheel(0, 0, 40);
+  wheel(0, 0, 30);
   delay(500);
   while (1)
   {
