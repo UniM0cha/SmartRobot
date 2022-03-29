@@ -71,15 +71,22 @@ void loop()
   //   turn();
   // }
   // Yellow //
-  Direction_find(currentLine, 2);
+  // Direction_find(currentLine, 2);
   LineTracing();
   secondstart();
   lift_up(4000);
   LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
   lift_up(1700);
+  back(500);
+  wheel(-60, 20, 0);
+  delay(300);
   while (1)
   {
-    wheel(-60, 30, 0);
+    collectSensor();
+    wheel(-40, 10, 0);
     if (D4 == HIGH)
     {
       Serial.println("Line Found");
@@ -88,11 +95,18 @@ void loop()
     }
   }
   LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
   lift_down(700);
-  back(1000);
+  back(1100);
   lift_down(1000);
   LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
   lift_up(1700);
+  back(1100);
   prizm.PrizmEnd();
   // Serial.println(ColorCheck());
 }
