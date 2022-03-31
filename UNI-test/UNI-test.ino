@@ -52,24 +52,65 @@ void setup()
 
 void loop()
 {
-  findRightLine();
+  start();
   for (int k = 0; k < 6; k++)
   {
-    LineTracing();
-    back(1000);
-    turn();
-  }
 
-  /////////////////////////////////////////////
-  // start();
-  // for (int k = 0; k < 6; k++)
-  // {
-  //   LineTracing();
-  //   back(1000);
-  //   turn();
-  // }
-  ////////////////////////////////////////////
+    firstHamsu();
+    LineTracing();
+    lift_up(5800 - n);
+    targetLine = ColorCheck();
+    Serial.println(ColorCheck()); // Color값 체크
+    secondHamsu();
+    back(900);
+    Direction_find(currentLine, targetLine);
+    turn();
+    LineTracing();
+    lift_down(A);
+    back(900);
+    turn();
+    lift_down(n);
+  }
+  // Yellow //
+  Direction_find(currentLine, 2);
+  LineTracing();
+  secondstart();
+  lift_up(4000);
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_up(1700);
+  back(500);
+  wheel(-60, 20, 0);
+  delay(300);
+  while (1)
+  {
+    collectSensor();
+    wheel(-40, 10, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_down(700);
+  back(1100);
+  lift_down(1000);
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_up(1700);
+  back(1100);
+  firstend();
   prizm.PrizmEnd();
+  // Serial.println(ColorCheck());
 }
 
 // 처음 시작할 때 대각선으로 이동
@@ -77,7 +118,7 @@ void start()
 {
   collectSensor();
   wheel(-90, 10, -28);
-  delay(1800);
+  delay(1700);
   setDiff();
   while (1)
   {
@@ -174,21 +215,22 @@ int ColorCheck()
     Serial.println("color 인식 error");
     tcs.setInterrupt(true);
     r_cr = 4;
+    prizm.PrizmEnd();
   }
   else
   {
     tcs.setInterrupt(false);
-    if (r >= 525 && r <= 605 && g >= 245 && g <= 325 && b >= 230 && b <= 310)
+    if (r >= 260 && r <= 605 && g >= 220 && g <= 325 && b >= 180 && b <= 310)
     {
       Serial.println("RED");
       r_cr = RED;
     }
-    else if (r >= 180 && r <= 260 && g >= 400 && g <= 580 && b >= 240 && b <= 360)
+    else if (r >= 180 && r <= 260 && g >= 360 && g <= 580 && b >= 240 && b <= 355)
     {
       Serial.println("GREEN");
       r_cr = GREEN;
     }
-    else if (r >= 120 && r <= 200 && g >= 275 && g <= 355 && b >= 370 && b <= 505)
+    else if (r >= 110 && r <= 200 && g >= 240 && g <= 355 && b >= 360 && b <= 505)
     {
       Serial.println("BLUE");
       r_cr = BLUE;
@@ -200,10 +242,34 @@ int ColorCheck()
     }
     else
     {
-      r_cr = 0;
+      r_cr = 4;
+      Serial.println("색깔 값 다시 구하기");
+      prizm.PrizmEnd();
     }
   }
   return r_cr;
+}
+
+// 뒤로 돌아서 중간 맞추는 함수
+void turn()
+{
+  int errorRange = 600;
+  // 처음엔 빠른 속도로 돌다가
+  wheel(0, 0, 40);
+  delay(1200);
+  // 느린속도로 센서 감지
+  wheel(0, 0, 25);
+  while (1)
+  {
+    collectSensor();
+    // 아날로그 센서 사용
+    if (a2 - errorRange >= a1)
+    {
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+  center();
 }
 
 void Direction_find(int now_line, int next)
@@ -248,18 +314,12 @@ void Direction_move(int direc, int cnt)
     delay(300);
   }
   wheel(0, 0, 0);
-  center();
 }
 
 void firstHamsu()
 {
-  // 현재 서있는 라인에 블럭이 없을 때
   if (startBlock[currentLine][1] == 0)
   {
-    // TODO : 1번 줄이면 2번, 3번 차례로 봄
-    // TODO : 2번 줄이면 1번, 3번 차례로 봄
-    // TODO : 3번 줄이면 2번, 1번 차례로 봄
-    // 지금 코드는 그냥 0,1,2 가는거네?
     for (int i = 0; i < 3; i++)
     {
       if (startBlock[i][1] == 1)
@@ -269,19 +329,13 @@ void firstHamsu()
       }
     }
   }
-
-  // 현재 서있는 라인의 1층에만 블럭이 있을 때
-  else if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
+  if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
   {
-    // TODO : 1층 높이로 맞춘 후 가지러 가야함
     // lift_up(/*1층높이*/);    // 사실상 무쓸모 지워도 OK
     startBlock[currentLine][1] = 0;
   }
-
-  // 현재 서있는 라인의 2층에 블럭이 있을 때
   else if (startBlock[currentLine][0] == 1)
   {
-    // TODO : 2층 높이로 맞춘 후 가지러 가야함
     lift_up(1100);
     startBlock[currentLine][0] = 0;
   }
@@ -301,12 +355,10 @@ void secondHamsu()
   }
 }
 
-/////////////////////////// 정윤 /////////////////////////////
-
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
-  int frontSpeed = 50;
+  int frontSpeed = 40;
   int errorRange = 0;
 
   while (true)
@@ -383,33 +435,20 @@ void LineTracing()
     }
   }
 }
-
-// 뒤로 돌아서 중간 맞추는 함수
-void turn()
-{
-  // 처음엔 빠른 속도로 돌다가
-  wheel(0, 0, 40);
-  delay(1200);
-  wheel(0, 0, 25);
-  while (1)
-  {
-    collectSensor();
-    // 그 후 아날로그 센서 사용
-    if (a2 - 600 >= a1)
-    {
-      wheel(0, 0, 0);
-      break;
-    }
-  }
-  center();
-}
-
 // 뒤로 간다음 중간 맞춤
 void back(int time)
 {
   wheel(0, 50, 0);
   delay(time);
+  wheel(0, 0, 0);
   center();
+}
+// 아날로그 센서값 통일
+void setDiff()
+{
+  a1 = analogRead(A1);
+  a2 = analogRead(A2);
+  diff = a2 - a1;
 }
 
 // 가운데를 맞추기 위해 '횡이동'만 하는 코드
@@ -418,7 +457,7 @@ void center()
   int frontSpeed = 0;
   int analogSpeed = 30;
   int digitalSpeed = 40;
-  int errorRange = 50;
+  int errorRange = 100;
 
   while (1)
   {
@@ -428,14 +467,14 @@ void center()
     {
       if (a1 > a2 + errorRange)
       {
-        // 왼쪽 횡이동
-        wheel(analogSpeed, -frontSpeed, 0);
+        // 왼쪽 궁뎅이이동
+        wheel(analogSpeed, -frontSpeed, analogSpeed - 10);
       }
 
       else if (a1 + errorRange < a2)
       {
         // 오른쪽 횡이동
-        wheel(-analogSpeed, -frontSpeed, 0);
+        wheel(-analogSpeed, -frontSpeed, -analogSpeed + 10);
       }
     }
     // 가운데가 맞춰졌을 때
@@ -445,14 +484,6 @@ void center()
       break;
     }
   }
-}
-
-// 아날로그 좌우 센서값 통일
-void setDiff()
-{
-  a1 = analogRead(A1);
-  a2 = analogRead(A2);
-  diff = a2 - a1;
 }
 
 // 센서 값 읽는 함수
@@ -475,4 +506,40 @@ void collectSensor()
   Serial.println(D4);
 }
 
-////////////////////////// 정윤 /////////////////////////
+void secondstart()
+{
+  collectSensor();
+  wheel(-90, -10, 28);
+  delay(1700);
+  setDiff();
+  while (1)
+  {
+    collectSensor();
+    wheel(45, 0, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}
+
+void firstend()
+{
+  collectSensor();
+  wheel(90, 10, -28);
+  delay(1700);
+  setDiff();
+  while (1)
+  {
+    collectSensor();
+    wheel(45, 0, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}

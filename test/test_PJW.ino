@@ -253,15 +253,17 @@ int ColorCheck()
 // 뒤로 돌아서 중간 맞추는 함수
 void turn()
 {
+  int errorRange = 600;
   // 처음엔 빠른 속도로 돌다가
   wheel(0, 0, 40);
   delay(1200);
+  // 느린속도로 센서 감지
   wheel(0, 0, 25);
   while (1)
   {
     collectSensor();
-    // 그 후 아날로그 센서 사용
-    if (a2 - 600 >= a1)
+    // 아날로그 센서 사용
+    if (a2 - errorRange >= a1)
     {
       wheel(0, 0, 0);
       break;
