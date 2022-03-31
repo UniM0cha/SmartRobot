@@ -52,26 +52,27 @@ void setup()
 
 void loop()
 {
-  // start();
-  // for (int k = 0; k < 6; k++)
-  // {
+  start();
+  for (int k = 0; k < 6; k++)
+  {
 
-  //   firstHamsu();
-  //   LineTracing();
-  //   lift_up(5800 - n);
-  //   targetLine = ColorCheck();
-  //   secondHamsu();
-  //   back(1000);
-  //   Direction_find(currentLine, targetLine);
-  //   turn();
-  //   LineTracing();
-  //   lift_down(A);
-  //   back(1000);
-  //   lift_down(n);
-  //   turn();
-  // }
+    firstHamsu();
+    LineTracing();
+    lift_up(5800 - n);
+    targetLine = ColorCheck();
+    Serial.println(ColorCheck()); // Color값 체크
+    secondHamsu();
+    back(900);
+    Direction_find(currentLine, targetLine);
+    turn();
+    LineTracing();
+    lift_down(A);
+    back(900);
+    turn();
+    lift_down(n);
+  }
   // Yellow //
-  // Direction_find(currentLine, 2);
+  Direction_find(currentLine, 2);
   LineTracing();
   secondstart();
   lift_up(4000);
@@ -107,6 +108,7 @@ void loop()
   wheel(0, 0, 0);
   lift_up(1700);
   back(1100);
+  firstend();
   prizm.PrizmEnd();
   // Serial.println(ColorCheck());
 }
@@ -213,21 +215,22 @@ int ColorCheck()
     Serial.println("color 인식 error");
     tcs.setInterrupt(true);
     r_cr = 4;
+    prizm.PrizmEnd();
   }
   else
   {
     tcs.setInterrupt(false);
-    if (r >= 525 && r <= 605 && g >= 245 && g <= 325 && b >= 230 && b <= 310)
+    if (r >= 260 && r <= 605 && g >= 220 && g <= 325 && b >= 180 && b <= 310)
     {
       Serial.println("RED");
       r_cr = RED;
     }
-    else if (r >= 180 && r <= 260 && g >= 400 && g <= 580 && b >= 240 && b <= 360)
+    else if (r >= 180 && r <= 260 && g >= 360 && g <= 580 && b >= 240 && b <= 355)
     {
       Serial.println("GREEN");
       r_cr = GREEN;
     }
-    else if (r >= 120 && r <= 200 && g >= 275 && g <= 355 && b >= 425 && b <= 505)
+    else if (r >= 110 && r <= 200 && g >= 240 && g <= 355 && b >= 360 && b <= 505)
     {
       Serial.println("BLUE");
       r_cr = BLUE;
@@ -240,6 +243,8 @@ int ColorCheck()
     else
     {
       r_cr = 4;
+      Serial.println("색깔 값 다시 구하기");
+      prizm.PrizmEnd();
     }
   }
   return r_cr;
@@ -351,7 +356,7 @@ void secondHamsu()
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
-  int frontSpeed = 50;
+  int frontSpeed = 40;
   int errorRange = 0;
 
   while (true)
@@ -449,7 +454,7 @@ void center()
   int frontSpeed = 0;
   int analogSpeed = 30;
   int digitalSpeed = 40;
-  int errorRange = 50;
+  int errorRange = 100;
 
   while (1)
   {
@@ -459,14 +464,14 @@ void center()
     {
       if (a1 > a2 + errorRange)
       {
-        // 왼쪽 횡이동
-        wheel(analogSpeed, -frontSpeed, 0);
+        // 왼쪽 궁뎅이이동
+        wheel(analogSpeed, -frontSpeed, analogSpeed - 10);
       }
 
       else if (a1 + errorRange < a2)
       {
         // 오른쪽 횡이동
-        wheel(-analogSpeed, -frontSpeed, 0);
+        wheel(-analogSpeed, -frontSpeed, -analogSpeed + 10);
       }
     }
     // 가운데가 맞춰졌을 때
@@ -502,6 +507,25 @@ void secondstart()
 {
   collectSensor();
   wheel(-90, -10, 28);
+  delay(1700);
+  setDiff();
+  while (1)
+  {
+    collectSensor();
+    wheel(45, 0, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}
+
+void firstend()
+{
+  collectSensor();
+  wheel(90, 10, -28);
   delay(1700);
   setDiff();
   while (1)
