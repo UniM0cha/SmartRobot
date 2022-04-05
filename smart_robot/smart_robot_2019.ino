@@ -333,6 +333,7 @@ void same_objPutdown()
 
     lift_down(n);
 }
+
 void diff_objPutdown(int now_line, int compare, int two, int one)
 { //색상이 다른 오브젝트 내려놓기
     // lift_up(4000);//목표지점을 위한 리프트 높이
@@ -414,6 +415,7 @@ void diff_objPutdown(int now_line, int compare, int two, int one)
 
     lift_down(n);
 }
+
 void turn_r()
 { //오른쪽 회전 함수
     wheel(0, 0, 250);
@@ -578,7 +580,7 @@ void positing()
 void centering()
 { //로봇이 라인 중앙에 맞춰 이동할 수 있게 하는 함수
     int s1 = analogRead(A1);
-    int s2 = analogRead(A2);
+    int s2 = analogRead(ghgA2);
     if (prizm.readLineSensor(5) == LOW)
     {
         wheel(-100, 0, 0); //우방

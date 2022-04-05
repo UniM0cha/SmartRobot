@@ -52,63 +52,69 @@ void setup()
 
 void loop()
 {
-  start();
-  for (int k = 0; k < 6; k++)
-  {
-
-    firstHamsu();
-    LineTracing();
-    lift_up(5800 - n);
-    targetLine = ColorCheck();
-    Serial.println(ColorCheck()); // Color값 체크
-    secondHamsu();
-    back(900);
-    Direction_find(currentLine, targetLine);
-    turn();
-    LineTracing();
-    lift_down(A);
-    back(900);
-    turn();
-    lift_down(n);
-  }
-  // Yellow //
-  Direction_find(currentLine, 2);
+  //  start();
+  //  for (int k = 0; k < 6; k++)
+  //  {
+  //
+  //    firstHamsu();
+  //    LineTracing();
+  //    lift_up(5800 - n);
+  //    targetLine = ColorCheck();
+  //    Serial.println(ColorCheck()); // Color값 체크
+  //    secondHamsu();
+  //    back(900);
+  //    Direction_find(currentLine, targetLine);
+  //    turn();
+  //    LineTracing();
+  //    lift_down(A);
+  //    back(900);
+  //    turn();
+  //    lift_down(n);
+  //  }
+  //  // Yellow //
+  //  Direction_find(currentLine, 2);
+  //  LineTracing();
+  //  secondstart();
+  //  lift_up(4000);
+  //  LineTracing();
+  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  //  delay(100);
+  //  wheel(0, 0, 0);
+  //  lift_up(1700);
+  //  back(500);
+  //  wheel(-60, 20, 0);
+  //  delay(300);
+  //  while (1)
+  //  {
+  //    collectSensor();
+  //    wheel(-40, 10, 0);
+  //    if (D4 == HIGH)
+  //    {
+  //      Serial.println("Line Found");
+  //      wheel(0, 0, 0);
+  //      break;
+  //    }
+  //  }
+  //  LineTracing();
+  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  //  delay(100);
+  //  wheel(0, 0, 0);
+  //  lift_down(700);
+  //  back(1100);
+  //  lift_down(1000);
+  //  LineTracing();
+  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  //  delay(100);
+  //  wheel(0, 0, 0);
+  //  lift_up(1700);
+  //  back(1300);
+  lift_up(5700);
+  currentLine = 2;
+  //  firstend();
+  Direction_find(currentLine, 0);
   LineTracing();
-  secondstart();
-  lift_up(4000);
-  LineTracing();
-  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  delay(100);
-  wheel(0, 0, 0);
-  lift_up(1700);
-  back(500);
-  wheel(-60, 20, 0);
-  delay(300);
-  while (1)
-  {
-    collectSensor();
-    wheel(-40, 10, 0);
-    if (D4 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      break;
-    }
-  }
-  LineTracing();
-  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  delay(100);
-  wheel(0, 0, 0);
-  lift_down(700);
-  back(1100);
-  lift_down(1000);
-  LineTracing();
-  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  delay(100);
-  wheel(0, 0, 0);
-  lift_up(1700);
-  back(1100);
-  firstend();
+  secondend();
+  lastend();
   prizm.PrizmEnd();
   // Serial.println(ColorCheck());
 }
@@ -149,6 +155,9 @@ void wheel(int x, int y, int z)
 void findRightLine()
 {
   Serial.println("Find Right Line...");
+  collectSensor();
+  wheel(-45, 0, 0);
+  delay(200);
   while (1)
   {
     collectSensor();
@@ -165,7 +174,10 @@ void findRightLine()
 
 void findLeftLine()
 {
+  collectSensor();
   Serial.println("Find Left Line...");
+  wheel(45, 0, 0);
+  delay(200);
   while (1)
   {
     collectSensor();
@@ -440,7 +452,9 @@ void back(int time)
 {
   wheel(0, 50, 0);
   delay(time);
+  wheel(0, 0, 0);
   center();
+  Serial.println("back하는중");
 }
 // 아날로그 센서값 통일
 void setDiff()
@@ -472,7 +486,7 @@ void center()
 
       else if (a1 + errorRange < a2)
       {
-        // 오른쪽 횡이동
+        // 오른쪽 궁뎅이이동
         wheel(-analogSpeed, -frontSpeed, -analogSpeed + 10);
       }
     }
@@ -537,6 +551,51 @@ void firstend()
     if (D3 == HIGH)
     {
       Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}
+void secondend()
+{
+  collectSensor();
+  wheel(90, 10, -28);
+  delay(1700);
+  wheel(40, 0, 0);
+  delay(200);
+  setDiff();
+
+  while (1)
+  {
+    collectSensor();
+    wheel(0, -50, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      lift_down(n);
+      back(1600);
+      break;
+    }
+  }
+  Serial.println("BREAK");
+}
+void lastend()
+{
+  Serial.println("last함수 시작");
+  collectSensor();
+  wheel(-90, 10, -28);
+  delay(1700);
+  setDiff();
+  while (1)
+  {
+    collectSensor();
+    wheel(-45, 0, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(-45, 0, 0);
+      delay(500);
       wheel(0, 0, 0);
       break;
     }
