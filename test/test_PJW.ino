@@ -114,7 +114,6 @@ void loop()
   Direction_find(currentLine, 0);
   LineTracing();
   secondend();
-  lastend();
   prizm.PrizmEnd();
   // Serial.println(ColorCheck());
 }
@@ -574,8 +573,10 @@ void secondend()
       Serial.println("Line Found");
       wheel(0, 0, 0);
       lift_down(n);
-      back(1600);
-      break;
+      wheel(0, 50, 0);
+      delay(1600);
+      wheel(0, 0, 0);
+      lastend break;
     }
   }
   Serial.println("BREAK");
