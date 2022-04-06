@@ -576,7 +576,8 @@ void secondend()
       wheel(0, 50, 0);
       delay(1600);
       wheel(0, 0, 0);
-      lastend() break;
+      lastend();
+      break;
     }
   }
   Serial.println("BREAK");
