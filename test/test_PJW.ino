@@ -69,7 +69,7 @@ void loop()
     lift_down(A);
     back(900);
     turn();
-    lift_down(n);
+    select_lift_down();
   }
   // Yellow //
   Direction_find(currentLine, 2);
@@ -113,7 +113,8 @@ void loop()
   LineTracing();
   secondend();
   prizm.PrizmEnd();
-  // Serial.println(ColorCheck());
+  //   Serial.println(ColorCheck());
+  //  collectSensor();
 }
 
 // 처음 시작할 때 대각선으로 이동
@@ -340,12 +341,15 @@ void firstHamsu()
   }
   if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
   {
-    // lift_up(/*1층높이*/);    // 사실상 무쓸모 지워도 OK
     startBlock[currentLine][1] = 0;
   }
-  else if (startBlock[currentLine][0] == 1)
+  else if (startBlock[currentLine][0] == 1 && n == 0)
   {
     lift_up(1100);
+    startBlock[currentLine][0] = 0;
+  }
+  else if (startBlock[currentLine][0] == 1 && n != 0)
+  {
     startBlock[currentLine][0] = 0;
   }
 }
@@ -359,7 +363,7 @@ void secondHamsu()
   }
   else if (endBlock[targetLine][1] == 0)
   {
-    A = 1800; // 단상위 1층에 내리기 위해
+    A = 1700; // 단상위 1층에 내리기 위해
     endBlock[targetLine][1] = 1;
   }
 }
@@ -728,5 +732,17 @@ void lastend()
       wheel(0, 0, 0);
       break;
     }
+  }
+}
+
+void select_lift_down()
+{
+  if (startBlock[currentLine][0] == 1)
+  {
+    lift_down(n - 1100);
+  }
+  else
+  {
+    lift_down(n);
   }
 }
