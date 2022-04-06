@@ -52,72 +52,68 @@ void setup()
 
 void loop()
 {
-  findRightLine();
-  center();
+  start();
+  for (int k = 0; k < 6; k++)
+  {
+    firstHamsu();
+    LineTracing();
+    lift_up(5800 - n);
+    targetLine = ColorCheck();
+    Serial.println(ColorCheck()); // Color값 체크
+    secondHamsu();
+    back(900);
+    Direction_find(currentLine, targetLine);
+    turn();
+    LineTracing();
+    lift_down(A);
+    back(900);
+    turn();
+    select_lift_down();
+  }
+  // Yellow //
+  Direction_find(currentLine, 2);
+  LineTracing();
+  secondstart();
+  lift_up(4000);
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_up(1700);
+  back(500);
+  wheel(-60, 20, 0);
+  delay(300);
+  while (1)
+  {
+    collectSensor();
+    wheel(-40, 10, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_down(700);
+  back(1100);
+  lift_down(1000);
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_up(1700);
+  back(1300);
+  firstend();
+  Direction_find(currentLine, 0);
+  LineTracing();
+  secondend();
   prizm.PrizmEnd();
-  // start();
-  // for (int k = 0; k < 6; k++)
-  // {
-
-  //   firstHamsu();
-  //   LineTracing();
-  //   lift_up(5800 - n);
-  //   targetLine = ColorCheck();
-  //   Serial.println(ColorCheck()); // Color값 체크
-  //   secondHamsu();
-  //   back(900);
-  //   Direction_find(currentLine, targetLine);
-  //   turn();
-  //   LineTracing();
-  //   lift_down(A);
-  //   back(900);
-  //   turn();
-  //   select_lift_down();
-  // }
-  // // Yellow //
-  // Direction_find(currentLine, 2);
-  // LineTracing();
-  // secondstart();
-  // lift_up(4000);
-  // LineTracing();
-  // wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  // delay(100);
-  // wheel(0, 0, 0);
-  // lift_up(1700);
-  // back(500);
-  // wheel(-60, 20, 0);
-  // delay(300);
-  // while (1)
-  // {
-  //   collectSensor();
-  //   wheel(-40, 10, 0);
-  //   if (D4 == HIGH)
-  //   {
-  //     Serial.println("Line Found");
-  //     wheel(0, 0, 0);
-  //     break;
-  //   }
-  // }
-  // LineTracing();
-  // wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  // delay(100);
-  // wheel(0, 0, 0);
-  // lift_down(700);
-  // back(1100);
-  // lift_down(1000);
-  // LineTracing();
-  // wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  // delay(100);
-  // wheel(0, 0, 0);
-  // lift_up(1700);
-  // back(1300);
-  // firstend();
-  // Direction_find(currentLine, 0);
-  // LineTracing();
-  // secondend();
-  // prizm.PrizmEnd();
-  // //   Serial.println(ColorCheck());
-  //  collectSensor();
+  //   Serial.println(ColorCheck());
+  collectSensor();
 }
 
 // 처음 시작할 때 대각선으로 이동
@@ -380,7 +376,7 @@ void secondHamsu()
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
 void LineTracing()
 {
-  int frontSpeed = 40;
+  int frontSpeed = 45;
   int errorRange = 0;
 
   while (true)
@@ -460,11 +456,11 @@ void LineTracing()
 // 뒤로 간다음 중간 맞춤
 void back(int time)
 {
+  Serial.println("back...");
   wheel(0, 50, 0);
   delay(time);
   wheel(0, 0, 0);
   center();
-  Serial.println("back하는중");
 }
 // 아날로그 센서값 통일
 void setDiff()
@@ -477,9 +473,9 @@ void setDiff()
 // 가운데 맞추는 코드
 void center()
 {
-  int errorRange = 60;
+  int errorRange = 80;
   int onLine = 250;    // 아날로그 센서가 줄 위에 있을 때의 센서 최소값
-  int checkTime = 500; // 이 숫자를 올리면 줄을 찾는 반경이 넓어짐
+  int checkTime = 700; // 이 숫자를 올리면 줄을 찾는 반경이 넓어짐
 
   while (1)
   {
@@ -513,7 +509,7 @@ void center()
               wheel(0, 0, 0);
               break;
             }
-            wheel(0, 0, 30);
+            wheel(0, 0, 25);
             collectSensor();
           }
 
@@ -532,7 +528,7 @@ void center()
               wheel(0, 0, 0);
               break;
             }
-            wheel(0, 0, -30);
+            wheel(0, 0, -25);
             collectSensor();
           }
 
@@ -548,12 +544,12 @@ void center()
       else if (a1 < a2 - errorRange)
       {
         Serial.println("D2 감지 | A2 감지 됨");
-        wheel(0, 0, 16);
+        wheel(0, 0, 15);
       }
       else if (a1 - errorRange > a2)
       {
         Serial.println("D2 감지 | A1 감지 됨");
-        wheel(0, 0, -16);
+        wheel(0, 0, -15);
       }
       else
       {
@@ -576,12 +572,12 @@ void center()
           while (1)
           {
             end = millis();
-            if (end - start >= checkTime || isFoundLine == true)
+            if (end - start >= checkTime || isFoundLine)
             {
               wheel(0, 0, 0);
               break;
             }
-            wheel(-50, 0, -20);
+            wheel(-10, 0, -20);
             collectSensor();
             if (D2 == HIGH)
             {
@@ -595,12 +591,12 @@ void center()
           while (1)
           {
             end = millis();
-            if (end - start >= checkTime * 2 || isFoundLine == true)
+            if (end - start >= checkTime * 2 || isFoundLine)
             {
               wheel(0, 0, 0);
               break;
             }
-            wheel(50, 0, 20);
+            wheel(10, 0, 20);
             collectSensor();
             if (D2 == HIGH)
             {
@@ -619,9 +615,52 @@ void center()
         else // 줄에서 벗어나 있을 경우
         {
           Serial.println("D2 감지 안됨 | A1 A2 감지 안됨");
-          wheel(0, 0, 0);
-          Serial.println("에러: 줄에서 완전히 벗어남");
-          prizm.PrizmEnd();
+          bool isFoundLine = false;
+          // 오른쪽 탐색
+          int start = millis();
+          int end = millis();
+          while (1)
+          {
+            end = millis();
+            if (end - start >= checkTime || isFoundLine)
+            {
+              wheel(0, 0, 0);
+              break;
+            }
+            wheel(-10, 0, -20);
+            collectSensor();
+            if (D2 == HIGH)
+            {
+              isFoundLine = true;
+            }
+          }
+
+          // 왼쪽 탐색
+          start = millis();
+          end = millis();
+          while (1)
+          {
+            end = millis();
+            if (end - start >= checkTime * 2 || isFoundLine)
+            {
+              wheel(0, 0, 0);
+              break;
+            }
+            wheel(10, 0, 20);
+            collectSensor();
+            if (D2 == HIGH)
+            {
+              isFoundLine = true;
+            }
+          }
+
+          // 오른쪽 왼쪽 탐색이 모두 끝났는데 줄을 찾지 못함 => 에러
+          if (isFoundLine == false)
+          {
+            wheel(0, 0, 0);
+            Serial.println("에러: 줄에서 완전히 벗어남");
+            prizm.PrizmEnd();
+          }
         }
       }
       else if (a1 < a2 - errorRange)
