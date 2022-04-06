@@ -52,65 +52,63 @@ void setup()
 
 void loop()
 {
-  //  start();
-  //  for (int k = 0; k < 6; k++)
-  //  {
-  //
-  //    firstHamsu();
-  //    LineTracing();
-  //    lift_up(5800 - n);
-  //    targetLine = ColorCheck();
-  //    Serial.println(ColorCheck()); // Color값 체크
-  //    secondHamsu();
-  //    back(900);
-  //    Direction_find(currentLine, targetLine);
-  //    turn();
-  //    LineTracing();
-  //    lift_down(A);
-  //    back(900);
-  //    turn();
-  //    lift_down(n);
-  //  }
-  //  // Yellow //
-  //  Direction_find(currentLine, 2);
-  //  LineTracing();
-  //  secondstart();
-  //  lift_up(4000);
-  //  LineTracing();
-  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  //  delay(100);
-  //  wheel(0, 0, 0);
-  //  lift_up(1700);
-  //  back(500);
-  //  wheel(-60, 20, 0);
-  //  delay(300);
-  //  while (1)
-  //  {
-  //    collectSensor();
-  //    wheel(-40, 10, 0);
-  //    if (D4 == HIGH)
-  //    {
-  //      Serial.println("Line Found");
-  //      wheel(0, 0, 0);
-  //      break;
-  //    }
-  //  }
-  //  LineTracing();
-  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  //  delay(100);
-  //  wheel(0, 0, 0);
-  //  lift_down(700);
-  //  back(1100);
-  //  lift_down(1000);
-  //  LineTracing();
-  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  //  delay(100);
-  //  wheel(0, 0, 0);
-  //  lift_up(1700);
-  //  back(1300);
-  lift_up(5700);
-  currentLine = 2;
-  //  firstend();
+  start();
+  for (int k = 0; k < 6; k++)
+  {
+
+    firstHamsu();
+    LineTracing();
+    lift_up(5800 - n);
+    targetLine = ColorCheck();
+    Serial.println(ColorCheck()); // Color값 체크
+    secondHamsu();
+    back(900);
+    Direction_find(currentLine, targetLine);
+    turn();
+    LineTracing();
+    lift_down(A);
+    back(900);
+    turn();
+    lift_down(n);
+  }
+  // Yellow //
+  Direction_find(currentLine, 2);
+  LineTracing();
+  secondstart();
+  lift_up(4000);
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_up(1700);
+  back(500);
+  wheel(-60, 20, 0);
+  delay(300);
+  while (1)
+  {
+    collectSensor();
+    wheel(-40, 10, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_down(700);
+  back(1100);
+  lift_down(1000);
+  LineTracing();
+  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
+  delay(100);
+  wheel(0, 0, 0);
+  lift_up(1700);
+  back(1300);
+  firstend();
   Direction_find(currentLine, 0);
   LineTracing();
   secondend();
@@ -558,8 +556,8 @@ void firstend()
 void secondend()
 {
   collectSensor();
-  wheel(90, 10, -28);
-  delay(1700);
+  wheel(90, 10, -27);
+  delay(1600);
   wheel(40, 0, 0);
   delay(200);
   setDiff();
@@ -576,6 +574,7 @@ void secondend()
       wheel(0, 50, 0);
       delay(1600);
       wheel(0, 0, 0);
+      delay(200);
       lastend();
       break;
     }
@@ -586,18 +585,20 @@ void lastend()
 {
   Serial.println("last함수 시작");
   collectSensor();
-  wheel(-90, 10, -28);
-  delay(1700);
+  wheel(0, 0, 45);
+  delay(1600);
+  wheel(70, 0, 0);
+  delay(1600);
   setDiff();
   while (1)
   {
     collectSensor();
-    wheel(-45, 0, 0);
+    wheel(0, 60, 0);
     if (D4 == HIGH)
     {
       Serial.println("Line Found");
-      wheel(-45, 0, 0);
-      delay(500);
+      wheel(0, 60, 0);
+      delay(100);
       wheel(0, 0, 0);
       break;
     }
