@@ -107,8 +107,11 @@ void loop()
   delay(100);
   wheel(0, 0, 0);
   lift_up(1700);
-  back(1100);
+  back(1300);
   firstend();
+  Direction_find(currentLine, 0);
+  LineTracing();
+  secondend();
   prizm.PrizmEnd();
   // Serial.println(ColorCheck());
 }
@@ -149,6 +152,9 @@ void wheel(int x, int y, int z)
 void findRightLine()
 {
   Serial.println("Find Right Line...");
+  collectSensor();
+  wheel(-45, 0, 0);
+  delay(200);
   while (1)
   {
     collectSensor();
@@ -165,7 +171,10 @@ void findRightLine()
 
 void findLeftLine()
 {
+  collectSensor();
   Serial.println("Find Left Line...");
+  wheel(45, 0, 0);
+  delay(200);
   while (1)
   {
     collectSensor();
@@ -442,6 +451,7 @@ void back(int time)
   delay(time);
   wheel(0, 0, 0);
   center();
+  Serial.println("back하는중");
 }
 // 아날로그 센서값 통일
 void setDiff()
@@ -473,7 +483,7 @@ void center()
 
       else if (a1 + errorRange < a2)
       {
-        // 오른쪽 횡이동
+        // 오른쪽 궁뎅이이동
         wheel(-analogSpeed, -frontSpeed, -analogSpeed + 10);
       }
     }
@@ -538,6 +548,57 @@ void firstend()
     if (D3 == HIGH)
     {
       Serial.println("Line Found");
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+}
+void secondend()
+{
+  collectSensor();
+  wheel(90, 10, -27);
+  delay(1600);
+  wheel(40, 0, 0);
+  delay(200);
+  setDiff();
+
+  while (1)
+  {
+    collectSensor();
+    wheel(0, -50, 0);
+    if (D3 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 0, 0);
+      lift_down(n);
+      wheel(0, 50, 0);
+      delay(1600);
+      wheel(0, 0, 0);
+      delay(200);
+      lastend();
+      break;
+    }
+  }
+  Serial.println("BREAK");
+}
+void lastend()
+{
+  Serial.println("last함수 시작");
+  collectSensor();
+  wheel(0, 0, 45);
+  delay(1600);
+  wheel(70, 0, 0);
+  delay(1600);
+  setDiff();
+  while (1)
+  {
+    collectSensor();
+    wheel(0, 60, 0);
+    if (D4 == HIGH)
+    {
+      Serial.println("Line Found");
+      wheel(0, 60, 0);
+      delay(100);
       wheel(0, 0, 0);
       break;
     }

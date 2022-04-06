@@ -461,42 +461,168 @@ void setDiff()
   diff = a2 - a1;
 }
 
-// 가운데를 맞추기 위해 '횡이동'만 하는 코드
+// 가운데 맞추는 코드
 void center()
 {
-  int frontSpeed = 0;
-  int analogSpeed = 30;
-  int digitalSpeed = 40;
-  int errorRange = 100;
+  int errorRange = 50;
+  int onLine = 300;
+  int checkTime = 1000; // 이 숫자를 올리면 줄을 찾는 반경이 넓어짐
 
   while (1)
   {
     collectSensor();
-    // 가운데가 아닐 때
-    if (D2 == LOW)
+    if (D2 == HIGH)
     {
-      if (a1 > a2 + errorRange)
+      if (a1 >= a2 - errorRange && a1 - errorRange <= a2)
       {
-        // 왼쪽 궁뎅이이동
-        wheel(analogSpeed, -frontSpeed, analogSpeed - 10);
-      }
+        if (a1 >= onLine && a2 >= onLine) // 최종 목표
+        {
+          wheel(0, 0, 0);
+          break;
+        }
+        else // 줄에서 벗어나 있을 경우
+        {
+          bool isFoundLine = false;
+          // 오른쪽 탐색
+          int start = millis();
+          int end = millis();
+          while (1)
+          {
+            end = millis();
+            if (end - start >= checkTime || isFoundLine == true)
+            {
+              wheel(0, 0, 0);
+              break;
+            }
+            wheel(0, 0, 30);
+            collectSensor();
+            if (a2 > onLine)
+            {
+              isFoundLine = true;
+            }
+          }
 
-      else if (a1 + errorRange < a2)
+          // 왼쪽 탐색
+          start = millis();
+          end = millis();
+          while (1)
+          {
+            end = millis();
+            if (end - start >= checkTime * 2 || isFoundLine == true)
+            {
+              wheel(0, 0, 0);
+              break;
+            }
+            wheel(0, 0, -30);
+            collectSensor();
+            if (a1 > onLine)
+            {
+              isFoundLine = true;
+            }
+          }
+
+          // 오른쪽 왼쪽 탐색이 모두 끝났는데 줄을 찾지 못함 => 에러
+          if (isFoundLine == false)
+          {
+            wheel(0, 0, 0);
+            Serial.println("에러: D2가 감지된 상태에서 줄을 찾지 못함");
+            prizm.PrizmEnd();
+          }
+        }
+      }
+      else if (a1 < a2 - errorRange)
       {
-        // 오른쪽 궁뎅이이동
-        wheel(-analogSpeed, -frontSpeed, -analogSpeed + 10);
+        wheel(0, 0, 30);
+      }
+      else if (a1 - errorRange > a2)
+      {
+        wheel(0, 0, -30);
+      }
+      else
+      {
+        wheel(0, 0, 0);
+        Serial.println("에러: 알 수 없는 오류 1");
+        prizm.PrizmEnd();
       }
     }
-    // 가운데가 맞춰졌을 때
-    else if (D2 == HIGH)
+    else if (D2 == LOW)
     {
-      wheel(0, 0, 0);
-      break;
+      if (a1 >= a2 - errorRange && a1 - errorRange <= a2)
+      {
+        if (a1 >= onLine && a2 >= onLine)
+        {
+          bool isFoundLine = false;
+          // 오른쪽 탐색
+          int start = millis();
+          int end = millis();
+          while (1)
+          {
+            end = millis();
+            if (end - start >= checkTime || isFoundLine == true)
+            {
+              wheel(0, 0, 0);
+              break;
+            }
+            wheel(-15, 0, -15);
+            collectSensor();
+            if (D2 == HIGH)
+            {
+              isFoundLine = true;
+            }
+          }
+
+          // 왼쪽 탐색
+          start = millis();
+          end = millis();
+          while (1)
+          {
+            end = millis();
+            if (end - start >= checkTime * 2 || isFoundLine == true)
+            {
+              wheel(0, 0, 0);
+              break;
+            }
+            wheel(15, 0, 15);
+            collectSensor();
+            if (D2 == HIGH)
+            {
+              isFoundLine = true;
+            }
+          }
+
+          // 오른쪽 왼쪽 탐색이 모두 끝났는데 줄을 찾지 못함 => 에러
+          if (isFoundLine == false)
+          {
+            wheel(0, 0, 0);
+            Serial.println("에러: D2가 감지되지 않은 상태에서 줄을 찾지 못함");
+            prizm.PrizmEnd();
+          }
+        }
+        else // 줄에서 벗어나 있을 경우
+        {
+          wheel(0, 0, 30);
+          Serial.println("에러: 줄에서 완전히 벗어남");
+        }
+      }
+      else if (a1 < a2 - errorRange)
+      {
+        wheel(-30, 0, 0);
+      }
+      else if (a1 - errorRange > a2)
+      {
+        wheel(30, 0, 0);
+      }
+      else
+      {
+        wheel(0, 0, 0);
+        Serial.println("에러: 알 수 없는 오류 1");
+        prizm.PrizmEnd();
+      }
     }
   }
 }
 
-// 센서 값 읽는 함수
+// 센서 값 읽는 함수, 아날로그는 a2 값 기준
 void collectSensor()
 {
   a1 = analogRead(A1) + diff;
