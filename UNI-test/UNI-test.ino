@@ -125,10 +125,14 @@ void start()
   {
     collectSensor();
     wheel(-45, 0, 0);
-    if (D4 == HIGH)
+    if (D2 == HIGH)
     {
       Serial.println("Line Found");
+      wheel(45, 0, 0);
+      delay(230);
       wheel(0, 0, 0);
+      delay(200);
+      center();
       break;
     }
   }
