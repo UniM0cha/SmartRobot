@@ -652,7 +652,7 @@ void secondstart()
 void firstend()
 {
   collectSensor();
-  wheel(90, 10, -28);
+  wheel(90, 20, -25);
   delay(1700);
   setDiff();
   while (1)
@@ -673,7 +673,7 @@ void secondend()
   wheel(90, 10, -27);
   delay(1600);
   wheel(40, 0, 0);
-  delay(200);
+  delay(700);
   setDiff();
 
   while (1)
@@ -686,7 +686,7 @@ void secondend()
       wheel(0, 0, 0);
       lift_down(n);
       wheel(0, 50, 0);
-      delay(1600);
+      delay(1300);
       wheel(0, 0, 0);
       delay(200);
       lastend();
@@ -700,9 +700,9 @@ void lastend()
   Serial.println("last함수 시작");
   collectSensor();
   wheel(0, 0, 45);
-  delay(1600);
-  wheel(70, 0, 0);
-  delay(1600);
+  delay(1550);
+  wheel(70, 20, 0);
+  delay(1630);
   setDiff();
   while (1)
   {
