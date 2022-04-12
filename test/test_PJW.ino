@@ -57,7 +57,7 @@ void loop()
   //  {
   //    firstHamsu();
   //    LineTracing();
-  //    lift_up(5800 - n);
+  //    lift_up(5700 - n);
   //    targetLine = ColorCheck();
   //    Serial.println(ColorCheck()); // Color값 체크
   //    secondHamsu();
@@ -74,7 +74,8 @@ void loop()
   //  Direction_find(currentLine, 2);
   //  LineTracing();
   //  secondstart();
-
+  //
+  //
   //  lift_up(4000);
   //  LineTracing();
   //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
@@ -110,10 +111,12 @@ void loop()
   //  back(1300);
   //  firstend();
   //  Direction_find(currentLine, 0);
-
-  lift_up(5700);
-  LineTracing();
-  secondend();
+  //
+  //
+  //  LineTracing();
+  //  secondend();
+  lift_up(2850);
+  lift_down(n);
   prizm.PrizmEnd();
 }
 
@@ -199,7 +202,7 @@ void findLeftLine()
 void lift_up(int s)
 { //리프트 up 함수
   n += s;
-  prizm.setMotorSpeed(1, -300);
+  prizm.setMotorSpeed(1, -600);
   delay(s);
   prizm.setMotorSpeed(1, 0);
 }
@@ -207,7 +210,7 @@ void lift_up(int s)
 void lift_down(int s)
 { //리프트 down 함수
   n -= s;
-  prizm.setMotorSpeed(1, 300);
+  prizm.setMotorSpeed(1, 600);
   delay(s);
   prizm.setMotorSpeed(1, 0);
 }
@@ -701,7 +704,7 @@ void lastend()
   wheel(0, 0, 45);
   delay(1550);
   wheel(70, 20, 0);
-  delay(1630);
+  delay(1680);
   setDiff();
   while (1)
   {
