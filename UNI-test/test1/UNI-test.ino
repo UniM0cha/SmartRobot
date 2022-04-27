@@ -155,8 +155,8 @@ void findRightLine()
 {
   Serial.println("Find Right Line...");
   collectSensor();
-  wheel(-45, 0, 0);
-  delay(200);
+  wheel(-60, 0, 0);
+  delay(800);
   while (1)
   {
     collectSensor();
@@ -178,8 +178,8 @@ void findLeftLine()
 {
   collectSensor();
   Serial.println("Find Left Line...");
-  wheel(45, 0, 0);
-  delay(200);
+  wheel(60, 0, 0);
+  delay(800);
   while (1)
   {
     collectSensor();
@@ -477,7 +477,7 @@ void center()
 {
   int errorRange = 80;
   int onLine = 250;      // 아날로그 센서가 줄 위에 있을 때의 센서 최소값
-  int checkTime = 500;   // 이 숫자를 올리면 줄을 찾는 반경이 넓어짐
+  int checkTime = 300;   // 이 숫자를 올리면 줄을 찾는 반경이 넓어짐
   bool isCenter = false; // 중앙(D2) 확인
   bool isMiddle = false; // 중간(a1, a2)확인
 
