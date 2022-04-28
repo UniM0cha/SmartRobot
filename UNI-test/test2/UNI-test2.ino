@@ -22,16 +22,12 @@ EXPANSION exc1;
 EXPANSION exc2;
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_1X);
 
-enum direction
+enum CrossType
 {
-    END,
+    CROSS,
     LEFT,
-    RIGHT,
-    CROSS
+    RIGHT
 };
-
-void wheel(int x, int y, int z);
-void LineTracing();
 
 void setup()
 {
@@ -42,7 +38,8 @@ void setup()
 
 void loop()
 {
-    direction dir = lineTracing();
+    lineTracing();
+    CrossType dir = checkCross();
     delay(500);
     if (dir == CROSS)
     {
@@ -61,6 +58,11 @@ void loop()
     }
 }
 
+/**
+ * @param x +좌 / -우
+ * @param y +후 / -전
+ * @param z +우회전 / -좌회전
+ */
 void wheel(int x, int y, int z)
 {
     int A = 0, B = 0, C = 0, D = 0;
@@ -75,20 +77,11 @@ void wheel(int x, int y, int z)
 }
 
 /**
- * @brief
- * 교차로를 감지할 때까지 라인트레이싱 진행
- * 교차로를 발견하면 교차로의 중간까지 이동하고
- * 다음에 어디로 진행할 수 있는지 enum 타입인 direction 반환
- *
- * @return direction
+ * @brief 교차로를 감지할 때까지 라인트레이싱 진행
  */
-direction lineTracing()
+void lineTracing()
 {
-
-    bool D2 = NULL;
-    bool D3 = NULL;
-    bool D4 = NULL;
-    bool D5 = NULL;
+    bool D2, D3, D4, D5;
     while (true)
     {
         D2 = prizm.readLineSensor(2);
@@ -115,38 +108,61 @@ direction lineTracing()
             wheel(0, -50, 0);
         }
 
-        //== 교차로 감지 ==//
-        // D2 또는 D5가 감지되면 앞으로 조금만 더 이동해서 한번 더 감지 (+자 모양 일수도 있기 때문)
+        // 교차로 만나면 라인트레이싱 끝
         if (D2 || D5)
         {
-            wheel(0, -50, 0);
             delay(10);
-            D2 = prizm.readLineSensor(2);
-            D5 = prizm.readLineSensor(5);
-            delay(200);
-            wheel(0, 0, 0);
-
-            if (D2 && D5)
-            {
-                return CROSS;
-            }
-            else if (D2 && !D5)
-            {
-                return LEFT;
-            }
-            else if (!D2 && D5)
-            {
-                return RIGHT;
-            }
-            else
-            {
-                Serial.println("오류");
-                prizm.PrizmEnd();
-            }
+            return;
         }
     }
 }
 
+/**
+ * @brief 만난 교차로가 어떤 모양의 교차로인지 반환하고 교차로의 중간으로 이동
+ *
+ * @return CrossType
+ */
+CrossType checkCross()
+{
+    //== 교차로 감지 ==//
+    // D2 또는 D5가 감지되면 앞으로 조금만 더 이동해서 한번 더 감지 (+ 또는 ㅜ 모양일수도 있기 때문)
+    bool D2 = prizm.readLineSensor(2);
+    bool D5 = prizm.readLineSensor(5);
+    if (D2 || D5)
+    {
+        // 조금만 더 이동해서 한번 더 감지
+        wheel(0, -50, 0);
+        delay(10);
+        D2 = prizm.readLineSensor(2);
+        D5 = prizm.readLineSensor(5);
+
+        // 교차로의 중간까지 이동
+        delay(200);
+        wheel(0, 0, 0);
+
+        if (D2 && D5)
+        {
+            return CROSS;
+        }
+        else if (D2 && !D5)
+        {
+            return LEFT;
+        }
+        else if (!D2 && D5)
+        {
+            return RIGHT;
+        }
+        else
+        {
+            Serial.println("오류");
+            prizm.PrizmEnd();
+        }
+    }
+}
+
+/**
+ * @brief 수직인 선을 만날 때까지 왼쪽 회전
+ */
 void turnLeft()
 {
     wheel(0, 0, -30);
@@ -162,6 +178,9 @@ void turnLeft()
     }
 }
 
+/**
+ * @brief 수직인 선을 만날 때까지 오른쪽 회전
+ */
 void turnRight()
 {
     wheel(0, 0, 30);
