@@ -39,22 +39,20 @@ void setup()
 void loop()
 {
     lineTracing();
-    CrossType dir = checkCross();
-    delay(500);
-    if (dir == CROSS)
-    {
-        wheel(0, 0, 0);
-        prizm.PrizmEnd();
-    }
-    else if (dir == LEFT)
+    CrossType type = checkCross();
+    Serial.println(type);
+    if (type == CROSS)
     {
         turnLeft();
-        delay(500);
+        turnLeft();
     }
-    else if (dir == RIGHT)
+    else if (type == LEFT)
+    {
+        turnLeft();
+    }
+    else if (type == RIGHT)
     {
         turnRight();
-        delay(500);
     }
 }
 
@@ -93,25 +91,25 @@ void lineTracing()
         // D3 = true, D4 = false
         if (D3 && !D4)
         {
-            wheel(0, -30, -10);
+            wheel(0, -20, -9);
         }
 
         // D3 = false, D4 = true
         else if (!D3 && D4)
         {
-            wheel(0, -30, 10);
+            wheel(-0, -20, 9);
         }
 
         // D3 = false, D4 = false
         else if (!D3 && !D4)
         {
-            wheel(0, -50, 0);
+            wheel(0, -40, 0);
         }
 
         // 교차로 만나면 라인트레이싱 끝
         if (D2 || D5)
         {
-            delay(10);
+            wheel(0, 0, 0);
             return;
         }
     }
@@ -124,39 +122,41 @@ void lineTracing()
  */
 CrossType checkCross()
 {
-    //== 교차로 감지 ==//
-    // D2 또는 D5가 감지되면 앞으로 조금만 더 이동해서 한번 더 감지 (+ 또는 ㅜ 모양일수도 있기 때문)
-    bool D2 = prizm.readLineSensor(2);
-    bool D5 = prizm.readLineSensor(5);
-    if (D2 || D5)
+    bool D2 = false, D5 = false, left = false, right = false;
+
+    int start = millis();
+    int end = millis();
+
+    // 교차로의 중간까지 이동하면서 교차로 탐색
+    wheel(0, -40, 0);
+    while (end - start <= 400)
     {
-        // 조금만 더 이동해서 한번 더 감지
-        wheel(0, -50, 0);
-        delay(10);
+        end = millis();
         D2 = prizm.readLineSensor(2);
         D5 = prizm.readLineSensor(5);
+        if (D2)
+            left = true;
+        if (D5)
+            right = true;
+    }
+    wheel(0, 0, 0);
 
-        // 교차로의 중간까지 이동
-        delay(200);
-        wheel(0, 0, 0);
-
-        if (D2 && D5)
-        {
-            return CROSS;
-        }
-        else if (D2 && !D5)
-        {
-            return LEFT;
-        }
-        else if (!D2 && D5)
-        {
-            return RIGHT;
-        }
-        else
-        {
-            Serial.println("오류");
-            prizm.PrizmEnd();
-        }
+    if (left && right)
+    {
+        return CROSS;
+    }
+    else if (left && !right)
+    {
+        return LEFT;
+    }
+    else if (!left && right)
+    {
+        return RIGHT;
+    }
+    else
+    {
+        Serial.println("오류");
+        prizm.PrizmEnd();
     }
 }
 
@@ -173,6 +173,7 @@ void turnLeft()
         {
             delay(50);
             wheel(0, 0, 0);
+            delay(100);
             return;
         }
     }
@@ -189,8 +190,9 @@ void turnRight()
     {
         if (prizm.readLineSensor(4))
         {
-            delay(130);
+            delay(250);
             wheel(0, 0, 0);
+            delay(100);
             return;
         }
     }
