@@ -1,14 +1,12 @@
 #include <PRIZM.h>
 #include <stdio.h>
-#include "Adafruit_TCS34725.h"
 PRIZM prizm;
 EXPANSION exc1;
 EXPANSION exc2;
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_1X);
 
-#define RED 0;
-#define GREEN 1;
-#define BLUE 2;
+#define RED 1;
+#define GREEN 2;
+#define BLUE 3;
 
 #define RIGHT 1;
 #define LEFT -1;
@@ -23,23 +21,30 @@ int a1, a2, D2, D3, D4, diff;
 // 현재 리프트 높이
 int n = 0;
 
-// 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄
+// 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄 / 3 = 네번째줄 / 4 = 다섯번째줄 
 // 현재 자신이 있는 줄
 int currentLine = 0;
 // 목적지 줄
 int targetLine = 0;
+// 가운데 라인 기준 왼쪽 오른쪽 
+// 0 = 왼쪽 1 = 오른쪽
+int targetLineFlag = 0;
+int currentLineFlag = 0;
+
+int objectFlagCount = 0;
 
 int A = 0;
 
-/**
- * 옮겨야할 오브젝트 배열 1, 2, 3라인의 1층과 2층의 유무를 정의할 변수들
- * 0 : 없음(FALSE), 1 : 있음(TRUE) 으로 정의
- */
-
-// 처음 블록이 놓여있는 곳
-int startBlock[3][2] = {{1, 1}, {1, 1}, {1, 1}}; // {1번줄{2층, 1층}, 2번줄{2층, 1층}, 3번줄{2층, 1층}}
-// 블록을 놓아야 하는 곳
-int endBlock[3][2] = {{0, 0}, {0, 0}, {0, 0}};
+// 처음 기둥 위치
+// {1번줄{왼쪽, 오른쪽}, 2번줄{왼쪽, 오른쪽}, 3번줄{왼쪽, 오른쪽}, 4번줄{왼쪽, 오른쪽}, 5번줄{왼쪽, 오른쪽}}
+// 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
+int columnBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}; 
+// 오브젝트의 위치
+// 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3
+int objectBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}; 
+// 적재해야하는 오브젝트의 색 배열
+// 빨간색 = 1, 초록색 = 2, 파란색 = 3
+int objectColumnFlag[4] = {0, 0, 0, 0};
 
 void setup()
 {
@@ -52,92 +57,28 @@ void setup()
 
 void loop()
 {
-  //  start();
-  //  for (int k = 0; k < 6; k++)
-  //  {
-  //    firstHamsu();
-  //    LineTracing();
-  //    lift_up(5700 - n);
-  //    targetLine = ColorCheck();
-  //    Serial.println(ColorCheck()); // Color값 체크
-  //    secondHamsu();
-  //    back(900);
-  //    Direction_find(currentLine, targetLine);
-  //    turn();
-  //    LineTracing();
-  //    lift_down(A);
-  //    back(900);
-  //    turn();
-  //    select_lift_down();
-  //  }
-  //  // Yellow //
-  //  Direction_find(currentLine, 2);
-  //  LineTracing();
-  //  secondstart();
-  //
-  //
-  //  lift_up(4000);
-  //  LineTracing();
-  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  //  delay(170);
-  //  wheel(0, 0, 0);
-  //  lift_up(1700);
-  //  back(500);
-  //  wheel(-60, 20, 0);
-  //  delay(300);
-  //  while (1)
-  //  {
-  //    collectSensor();
-  //    wheel(-40, 10, 0);
-  //    if (D4 == HIGH)
-  //    {
-  //      Serial.println("Line Found");
-  //      wheel(0, 0, 0);
-  //      break;
-  //    }
-  //  }
-  //  LineTracing();
-  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  //  delay(170);
-  //  wheel(0, 0, 0);
-  //  lift_down(700);
-  //  back(1100);
-  //  lift_down(1000);
-  //  LineTracing();
-  //  wheel(0, -50, 0); //오브젝트 적재를 위한 전진
-  //  delay(170);
-  //  wheel(0, 0, 0);
-  //  lift_up(1700);
-  //  back(1300);
-  //  firstend();
-  //  Direction_find(currentLine, 0);
-  //
-  //
-  //  LineTracing();
-  //  secondend();
-  lift_up(2850);
-  lift_down(n);
-  prizm.PrizmEnd();
+  shart();      // 구현해야함
+  vkseks();     // 카메라 모듈값 받아야함
+  shfkstorakfrhwjrwo();
+  objectLiftup();   // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+  findYellowColumn();
+  objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  for(int i = 0; i < 3; i++)
+  {
+    flagColorLine(objectColumnFlag[i])
+    vkseks();   // 카메라 모듈값 받아야함
+    objectLiftup();   // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    findTargetColumn(objectColumnFlag[i]);
+    objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  }
+  finish();     // 구현해야함
 }
 
 // 처음 시작할 때 대각선으로 이동
 void start()
 {
-  collectSensor();
-  wheel(-90, 10, -28);
-  delay(1700);
-  setDiff();
-  while (1)
-  {
-    collectSensor();
-    wheel(-45, 0, 0);
-    if (D4 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      break;
-    }
-  }
+  // 직접 해보기
+  // 움직이다가 전진후 D3 & D4 만나면 스탑
 }
 
 void wheel(int x, int y, int z)
@@ -215,60 +156,6 @@ void lift_down(int s)
   prizm.setMotorSpeed(1, 0);
 }
 
-int ColorCheck()
-{
-  uint16_t r, g, b, c;
-  tcs.getRawData(&r, &g, &b, &c);
-  int r_cr;
-  Serial.print("r : ");
-  Serial.print(r);
-  Serial.print(", g : ");
-  Serial.print(g);
-  Serial.print(", b : ");
-  Serial.print(b);
-  Serial.print(", c : ");
-  Serial.print(c);
-  Serial.println();
-  if (c > 3500)
-  {
-    Serial.println("color 인식 error");
-    tcs.setInterrupt(true);
-    r_cr = 4;
-    prizm.PrizmEnd();
-  }
-  else
-  {
-    tcs.setInterrupt(false);
-    if (r >= 260 && r <= 605 && g >= 220 && g <= 325 && b >= 180 && b <= 310)
-    {
-      Serial.println("RED");
-      r_cr = RED;
-    }
-    else if (r >= 180 && r <= 260 && g >= 360 && g <= 580 && b >= 240 && b <= 355)
-    {
-      Serial.println("GREEN");
-      r_cr = GREEN;
-    }
-    else if (r >= 110 && r <= 200 && g >= 240 && g <= 355 && b >= 360 && b <= 505)
-    {
-      Serial.println("BLUE");
-      r_cr = BLUE;
-    }
-    else if (r >= 1100 && r <= 1360 && g >= 1130 && g <= 1400 && b >= 550 && b <= 670)
-    {
-      Serial.println("YELLOW");
-      r_cr = 3;
-    }
-    else
-    {
-      r_cr = 4;
-      Serial.println("색깔 값 다시 구하기");
-      prizm.PrizmEnd();
-    }
-  }
-  return r_cr;
-}
-
 // 뒤로 돌아서 중간 맞추는 함수
 void turn()
 {
@@ -291,24 +178,47 @@ void turn()
   center();
 }
 
-void Direction_find(int now_line, int next)
+void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
 {                                    //목적지 라인 찾기
-  int destination = now_line - next; //음수면 오른쪽, 양수면 왼쪽
+  int destination = now_line - next; //음수면 오른쪽, 양수면 왼쪽 // 음수면 왼쪽, 양수면 오른쪽
   int cnt = abs(destination);        //라인 이동 횟수
   int direc = 0;
-
-  if (destination < 0)
+  if (targetFlag - currentFlag != 0)
   {
-    direc = RIGHT;
+    back();
   }
-  else if (destination > 0)
+  if (currentLineFlag == 0) 
   {
-    direc = LEFT;
+    if (destination < 0)
+    {
+      direc = RIGHT;
+    }
+    else if (destination > 0)
+    {
+      direc = LEFT;
+    }
+    else
+    {
+      direc = STOP;
+    }
   }
-  else
+  else if (currentLineFlag == 1) 
   {
-    direc = STOP;
+    if (destination < 0)
+    {
+      direc = LEFT;
+    }
+    else if (destination > 0)
+    {
+      direc = RIGHT;
+    }
+    else
+    {
+      direc = STOP;
+    }
   }
+  
+  
   Serial.println(direc);
   Serial.println(cnt);
   Direction_move(direc, cnt); //목적지 라인으로 이동
@@ -465,6 +375,10 @@ void back(int time)
   delay(time);
   wheel(0, 0, 0);
   center();
+  if (currentFlag == 0)
+    currentLineFlag = 1;
+  else
+    currentLineFlag = 0;
 }
 // 아날로그 센서값 통일
 void setDiff()
@@ -632,103 +546,82 @@ void collectSensor()
   Serial.println(D4);
 }
 
-void secondstart()
+
+
+
+
+// 노란색기둥말고 가장 뒤쪽에서 가까운 오브젝트 라인 찾는 함수
+void shfkstorakfrhwjrwo() 
 {
-  collectSensor();
-  wheel(-90, -10, 28);
-  delay(1700);
-  setDiff();
-  while (1)
-  {
-    collectSensor();
-    wheel(45, 0, 0);
-    if (D3 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      break;
+  for(int i = 4; i >= 0 i--) {
+    for(int j = 1; j >= 0 j--) {
+      if(columnBlock[i][j] == 1 || columnBlock[i][j] == 2 || columnBlock[i][j] == 3) {
+        targetLine = i;
+        targetLineFlag = j;
+        break;
+      }
     }
   }
+  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
 }
 
-void firstend()
+void objectLiftup()
 {
-  collectSensor();
-  wheel(90, 20, -25);
-  delay(1700);
-  setDiff();
-  while (1)
-  {
-    collectSensor();
-    wheel(45, 0, 0);
-    if (D3 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      break;
-    }
-  }
-}
-void secondend()
-{
-  collectSensor();
-  wheel(90, 10, -27);
-  delay(1600);
-  wheel(40, 0, 0);
-  delay(700);
-  setDiff();
-
-  while (1)
-  {
-    collectSensor();
-    wheel(0, -50, 0);
-    if (D3 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 0, 0);
-      lift_down(n);
-      wheel(0, 50, 0);
-      delay(1300);
-      wheel(0, 0, 0);
-      delay(200);
-      lastend();
-      break;
-    }
-  }
-  Serial.println("BREAK");
-}
-void lastend()
-{
-  Serial.println("last함수 시작");
-  collectSensor();
-  wheel(0, 0, 45);
-  delay(1550);
-  wheel(70, 20, 0);
-  delay(1680);
-  setDiff();
-  while (1)
-  {
-    collectSensor();
-    wheel(0, 60, 0);
-    if (D4 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(0, 60, 0);
-      delay(100);
-      wheel(0, 0, 0);
-      break;
-    }
-  }
+  // 오브젝트 리프트업을 위한 전진과 리프트업 하고 뒤에까지 오기
 }
 
-void select_lift_down()
+void objectLiftdown()
 {
-  if (startBlock[currentLine][0] == 1)
-  {
-    lift_down(n - 1100);
-  }
-  else
-  {
-    lift_down(n);
-  }
+  // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
 }
+
+// 바로앞에 있는 오브젝트기둥의 색깔 판별
+void vkseks() {
+  objectColumnFlag[objectFlagCount] = columnBlock[currentLine][currentLineFlag];
+  objectFlagCount++;
+}
+
+void findYellowColumn()
+{
+  for(int i = 4; i >= 0 i--) {
+    for(int j = 1; j >= 0 j--) {
+      if(columnBlock[i][j] == 4) {
+        targetLine = i;
+        targetLineFlag = j;
+        break;
+      }
+    }
+  }
+  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
+}
+
+void findTargetColumn(int targetColumn)
+{
+  for(int i = 4; i >= 0 i--) {
+    for(int j = 1; j >= 0 j--) {
+      if(columnBlock[i][j] == targetColumn) {
+        targetLine = i;
+        targetLineFlag = j;
+        break;
+      }
+    }
+  }
+  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
+}
+
+void flagColorLine(int colorNum)
+{
+  for(int i = 4; i >= 0 i--) {
+    for(int j = 1; j >= 0 j--) {
+      if(objectBlock[i][j] == colorNum) {
+        targetLine = i;
+        targetLineFlag = j;
+        break;
+      }
+    }
+  }
+  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
+}
+}
+
+
