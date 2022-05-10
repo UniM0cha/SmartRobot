@@ -21,27 +21,29 @@ int a1, a2, D2, D3, D4, diff;
 // 현재 리프트 높이
 int n = 0;
 
-// 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄 / 3 = 네번째줄 / 4 = 다섯번째줄 
+// 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄 / 3 = 네번째줄 / 4 = 다섯번째줄
 // 현재 자신이 있는 줄
 int currentLine = 0;
 // 목적지 줄
 int targetLine = 0;
-// 가운데 라인 기준 왼쪽 오른쪽 
+// 가운데 라인 기준 왼쪽 오른쪽
 // 0 = 왼쪽 1 = 오른쪽
 int targetLineFlag = 0;
 int currentLineFlag = 0;
 
 int objectFlagCount = 0;
 
+int objectFlag = 0;
+
 int A = 0;
 
 // 처음 기둥 위치
 // {1번줄{왼쪽, 오른쪽}, 2번줄{왼쪽, 오른쪽}, 3번줄{왼쪽, 오른쪽}, 4번줄{왼쪽, 오른쪽}, 5번줄{왼쪽, 오른쪽}}
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
-int columnBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}; 
+int columnBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
 // 오브젝트의 위치
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3
-int objectBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}; 
+int objectBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
 // 적재해야하는 오브젝트의 색 배열
 // 빨간색 = 1, 초록색 = 2, 파란색 = 3
 int objectColumnFlag[4] = {0, 0, 0, 0};
@@ -57,21 +59,21 @@ void setup()
 
 void loop()
 {
-  shart();      // 구현해야함
-  vkseks();     // 카메라 모듈값 받아야함
-  shfkstorakfrhwjrwo();
-  objectLiftup();   // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-  findYellowColumn();
-  objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-  for(int i = 0; i < 3; i++)
+  shart();              // 구현해야함
+  vkseks();             // 카메라 모듈값 받아야함
+  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 끝 쪽 기둥 탐색 후 이동 //
+  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+  findYellowColumn();   // 노란색 기둥을 향해 이동 //
+  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  for (int i = 0; i < 3; i++)
   {
-    flagColorLine(objectColumnFlag[i])
-    vkseks();   // 카메라 모듈값 받아야함
-    objectLiftup();   // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-    findTargetColumn(objectColumnFlag[i]);
-    objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+    flagColorLine(objectColumnFlag[i])     // 판단함수에서 받은 기둥 색과 맞는 오브젝트를 찾아서 이동 //
+        vkseks();                          // 카메라 모듈값 받아야함
+    objectLiftup();                        // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    findTargetColumn(objectColumnFlag[i]); // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
+    objectLiftdown();                      // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
   }
-  finish();     // 구현해야함
+  finish(); // 구현해야함
 }
 
 // 처음 시작할 때 대각선으로 이동
@@ -185,9 +187,9 @@ void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
   int direc = 0;
   if (targetFlag - currentFlag != 0)
   {
-    back();
+    back(); // 시간 넣어주기
   }
-  if (currentLineFlag == 0) 
+  if (currentLineFlag == 0)
   {
     if (destination < 0)
     {
@@ -202,7 +204,7 @@ void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
       direc = STOP;
     }
   }
-  else if (currentLineFlag == 1) 
+  else if (currentLineFlag == 1)
   {
     if (destination < 0)
     {
@@ -217,8 +219,7 @@ void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
       direc = STOP;
     }
   }
-  
-  
+
   Serial.println(direc);
   Serial.println(cnt);
   Direction_move(direc, cnt); //목적지 라인으로 이동
@@ -243,48 +244,6 @@ void Direction_move(int direc, int cnt)
     delay(300);
   }
   wheel(0, 0, 0);
-}
-
-void firstHamsu()
-{
-  if (startBlock[currentLine][1] == 0)
-  {
-    for (int i = 0; i < 3; i++)
-    {
-      if (startBlock[i][1] == 1)
-      {
-        Direction_find(currentLine, i);
-        break;
-      }
-    }
-  }
-  if (startBlock[currentLine][0] == 0 && startBlock[currentLine][1] == 1)
-  {
-    startBlock[currentLine][1] = 0;
-  }
-  else if (startBlock[currentLine][0] == 1 && n == 0)
-  {
-    lift_up(1100);
-    startBlock[currentLine][0] = 0;
-  }
-  else if (startBlock[currentLine][0] == 1 && n != 0)
-  {
-    startBlock[currentLine][0] = 0;
-  }
-}
-
-void secondHamsu()
-{
-  if (endBlock[targetLine][1] == 1)
-  {
-    A = 700; // 단상위 2층에 내리기 위해
-    endBlock[targetLine][0] = 1;
-  }
-  else if (endBlock[targetLine][1] == 0)
-  {
-    A = 1700; // 단상위 1층에 내리기 위해
-    endBlock[targetLine][1] = 1;
-  }
 }
 
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
@@ -367,6 +326,7 @@ void LineTracing()
     }
   }
 }
+
 // 뒤로 간다음 중간 맞춤
 void back(int time)
 {
@@ -379,13 +339,6 @@ void back(int time)
     currentLineFlag = 1;
   else
     currentLineFlag = 0;
-}
-// 아날로그 센서값 통일
-void setDiff()
-{
-  a1 = analogRead(A1);
-  a2 = analogRead(A2);
-  diff = a2 - a1;
 }
 
 // 가운데 맞추는 코드
@@ -546,82 +499,151 @@ void collectSensor()
   Serial.println(D4);
 }
 
-
-
-
-
 // 노란색기둥말고 가장 뒤쪽에서 가까운 오브젝트 라인 찾는 함수
-void shfkstorakfrhwjrwo() 
+void shfkstorakfrhwjrwo()
 {
-  for(int i = 4; i >= 0 i--) {
-    for(int j = 1; j >= 0 j--) {
-      if(columnBlock[i][j] == 1 || columnBlock[i][j] == 2 || columnBlock[i][j] == 3) {
+  int forflag = 0;
+  for (int i = 4; i >= 0 i--)
+  {
+    for (int j = 1; j >= 0 j--)
+    {
+      if (columnBlock[i][j] == 1 || columnBlock[i][j] == 2 || columnBlock[i][j] == 3)
+      {
         targetLine = i;
         targetLineFlag = j;
+        objectFlag = objectBlock[i][j];
+        objectBlock[i][j] = 0;
+        forflag = 1;
         break;
       }
     }
+    if (forflag == 1)
+      break;
   }
-  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
+  Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
 void objectLiftup()
 {
+  while (1)
+  {
+    linetracing();
+    if (prizm.readSonicSensorCM() > 4) // 초음파 센서 거리가 --정도일 때
+    {
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+  objectGrap();
+  lift_up(); // lift 아주 살짝 올려주기
+  back();    // 시간 넣어주기
   // 오브젝트 리프트업을 위한 전진과 리프트업 하고 뒤에까지 오기
 }
 
 void objectLiftdown()
 {
+  while (1)
+  {
+    linetracing();
+    if (prizm.readSonicSensorCM() > 4) // 초음파 센서 거리가 --정도일 때
+    {
+      wheel(0, 0, 0);
+      break;
+    }
+  }
+  lift_down(n); // lift 올린만큼 내려주기
+  objectDrop();
+  back(); // 시간 넣어주기
   // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
 }
 
 // 바로앞에 있는 오브젝트기둥의 색깔 판별
-void vkseks() {
+void vkseks()
+{
   objectColumnFlag[objectFlagCount] = columnBlock[currentLine][currentLineFlag];
   objectFlagCount++;
 }
 
 void findYellowColumn()
 {
-  for(int i = 4; i >= 0 i--) {
-    for(int j = 1; j >= 0 j--) {
-      if(columnBlock[i][j] == 4) {
+  int forflag = 0;
+  for (int i = 4; i >= 0; i--)
+  {
+    for (int j = 1; j >= 0; j--)
+    {
+      if (columnBlock[i][j] == 4)
+      {
         targetLine = i;
         targetLineFlag = j;
+        objectBlock[i][j] = objectFlag;
+        forflag = 1;
         break;
       }
     }
+    if (forflag == 1)
+      break;
   }
-  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
+  Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
 void findTargetColumn(int targetColumn)
 {
-  for(int i = 4; i >= 0 i--) {
-    for(int j = 1; j >= 0 j--) {
-      if(columnBlock[i][j] == targetColumn) {
+  int forflag = 0;
+  for (int i = 4; i >= 0; i--)
+  {
+    for (int j = 1; j >= 0; j--)
+    {
+      if (columnBlock[i][j] == targetColumn)
+      {
         targetLine = i;
         targetLineFlag = j;
+        objectBlock[i][j] = objectFlag;
+        forflag = 1;
         break;
       }
     }
+    if (forflag == 1)
+      break;
   }
-  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
+  Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
+//
 void flagColorLine(int colorNum)
 {
-  for(int i = 4; i >= 0 i--) {
-    for(int j = 1; j >= 0 j--) {
-      if(objectBlock[i][j] == colorNum) {
+  int forflag = 0;
+  for (int i = 4; i >= 0; i--)
+  {
+    for (int j = 1; j >= 0; j--)
+    {
+      if (objectBlock[i][j] == colorNum)
+      {
         targetLine = i;
         targetLineFlag = j;
+        objectFlag = objectBlock[i][j];
+        objectBlock[i][j] = 0;
+        forflag = 1;
         break;
       }
     }
+    if (forflag == 1)
+      break;
   }
-  Direction_find(currentLine, targetLine, currentLineflag, targetLineFlag);
-}
+  Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
+void objectGrab()
+{
+  // 모터 회전
+}
 
+void objectDrop()
+{
+  // 모터 회전
+}
+
+void finish()
+{
+  Direction_find(currentLine, 0, currentLineFlag, 0);
+  // 끝라인에서 피니쉬 들어가기
+}
