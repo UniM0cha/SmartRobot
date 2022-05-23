@@ -38,22 +38,14 @@ void setup()
 
 void loop()
 {
-    lineTracing();
-    CrossType type = checkCross();
-    Serial.println(type);
-    if (type == CROSS)
-    {
-        turnLeft();
-        turnLeft();
-    }
-    else if (type == LEFT)
-    {
-        turnLeft();
-    }
-    else if (type == RIGHT)
-    {
-        turnRight();
-    }
+    start();
+    findNextCross();
+    findNextCross();
+    turnRight();
+    turnRight();
+    findNextCross();
+    findNextCross();
+    prizm.PrizmEnd();
 }
 
 /**
@@ -91,19 +83,19 @@ void lineTracing()
         // D3 = true, D4 = false
         if (D3 && !D4)
         {
-            wheel(0, -20, -9);
+            wheel(-20, 0, -9);
         }
 
         // D3 = false, D4 = true
         else if (!D3 && D4)
         {
-            wheel(-0, -20, 9);
+            wheel(-20, 0, 9);
         }
 
         // D3 = false, D4 = false
         else if (!D3 && !D4)
         {
-            wheel(0, -40, 0);
+            wheel(-40, 0, 0);
         }
 
         // 교차로 만나면 라인트레이싱 끝
@@ -128,7 +120,7 @@ CrossType checkCross()
     int end = millis();
 
     // 교차로의 중간까지 이동하면서 교차로 탐색
-    wheel(0, -40, 0);
+    wheel(-40, 0, 0);
     while (end - start <= 400)
     {
         end = millis();
@@ -140,6 +132,7 @@ CrossType checkCross()
             right = true;
     }
     wheel(0, 0, 0);
+    delay(100);
 
     if (left && right)
     {
@@ -190,11 +183,53 @@ void turnRight()
     {
         if (prizm.readLineSensor(4))
         {
-            delay(250);
+            delay(100);
             wheel(0, 0, 0);
             delay(100);
             return;
         }
     }
     return;
+}
+
+/**
+ * @brief 시작지점 -> 경기장 이동하는 코드
+ */
+void start()
+{
+    wheel(-30, -30, 0);
+    delay(1200);
+    wheel(-40, 0, 0);
+    bool D3 = false;
+    while (true)
+    {
+        D3 = prizm.readLineSensor(3);
+        if (D3)
+        {
+            delay(300);
+            wheel(0, -40, 0);
+            break;
+        }
+    }
+
+    bool D2 = false;
+    while (true)
+    {
+        D2 = prizm.readLineSensor(2);
+        if (D2)
+        {
+            delay(100);
+            wheel(0, 0, 0);
+            break;
+        }
+    }
+}
+
+/**
+ * @brief 다음 교차로까지 이동하는 함수
+ */
+CrossType findNextCross()
+{
+    lineTracing();
+    return checkCross();
 }
