@@ -38,14 +38,21 @@ void setup()
 
 void loop()
 {
-    start();
-    findNextCross();
-    findNextCross();
-    turnRight();
-    turnRight();
-    findNextCross();
-    findNextCross();
-    prizm.PrizmEnd();
+
+    int a1 = prizm.readSonicSensorCM(A1);
+    Serial.println(a1);
+
+    // // 대충 함수 사용법
+    // start();
+    // findNextCross();
+    // fowardToBlock();
+    // delay(1000);
+    // backwardFromBlock();
+    // delay(1000);
+    // turnRight();
+    // turnRight();
+    // findNextCross();
+    // prizm.PrizmEnd();
 }
 
 /**
@@ -183,7 +190,7 @@ void turnRight()
     {
         if (prizm.readLineSensor(4))
         {
-            delay(100);
+            delay(150);
             wheel(0, 0, 0);
             delay(100);
             return;
@@ -232,4 +239,46 @@ CrossType findNextCross()
 {
     lineTracing();
     return checkCross();
+}
+
+/**
+ * @brief 블록 가까이 다가가는 함수
+ * 교차로 <-> 블록 : 14cm
+ * 블록 바로 앞 : 4cm
+ */
+void fowardToBlock()
+{
+    wheel(0, -30, 0);
+    int a1 = prizm.readSonicSensorCM(A1);
+    while (true)
+    {
+        // 초음파센서 감지
+        a1 = prizm.readSonicSensorCM(A1);
+        if (a1 <= 4)
+        {
+            wheel(0, 0, 0);
+            break;
+        }
+    }
+}
+
+/**
+ * @brief 블록으로부터 멀어지는 함수
+ * 교차로 <-> 블록 : 14cm
+ * 블록 바로 앞 : 4cm
+ */
+void backwardFromBlock()
+{
+    wheel(0, 30, 0);
+    int a1 = prizm.readSonicSensorCM(A1);
+    while (true)
+    {
+        // 초음파센서 감지
+        a1 = prizm.readSonicSensorCM(A1);
+        if (a1 >= 14)
+        {
+            wheel(0, 0, 0);
+            break;
+        }
+    }
 }
