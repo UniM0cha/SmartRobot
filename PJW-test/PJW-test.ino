@@ -76,7 +76,6 @@ void setup()
     Serial.println(F("2.Please recheck the connection."));
     delay(100);
   }
-  collectSensor();
 }
 
 void loop()
@@ -86,9 +85,9 @@ void loop()
   //  qodufcodnrl();        // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
   //  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 끝 쪽 기둥 탐색 후 이동 //
   //  vkseks();             // 바로 앞에 있는 기둥의 색을 저장해놓기 //
-  //  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 세부 조절
+  //  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
   //  findYellowColumn();   // 노란색 기둥을 향해 이동 //
-  //  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  //  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
   //  for (int i = 0; i < 3; i++)
   //  {
   //   flagColorLine(objectColumnFlag[i]);     // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
@@ -164,45 +163,6 @@ void fowardToBlock()
 }
 
 /**
- * @brief 수직인 선을 만날 때까지 왼쪽 회전
- */
-void turnLeft()
-{
-  wheel(0, 0, -30);
-  delay(1000);
-  while (true)
-  {
-    if (prizm.readLineSensor(3))
-    {
-      delay(50);
-      wheel(0, 0, 0);
-      delay(100);
-      return;
-    }
-  }
-}
-
-/**
- * @brief 수직인 선을 만날 때까지 오른쪽 회전
- */
-void turnRight()
-{
-  wheel(0, 0, 30);
-  delay(1000);
-  while (true)
-  {
-    if (prizm.readLineSensor(4))
-    {
-      delay(150);
-      wheel(0, 0, 0);
-      delay(100);
-      return;
-    }
-  }
-  return;
-}
-
-/**
  * @brief 블록으로부터 멀어지는 함수
  * 교차로 <-> 블록 : 14cm
  * 블록 바로 앞 : 4cm
@@ -236,51 +196,51 @@ void wheel(int x, int y, int z)
   exc2.setMotorPowers(2, C, D);
 }
 
-void findRightLine()
-{
-  Serial.println("Find Right Line...");
-  collectSensor();
-  wheel(-45, 0, 0);
-  delay(200);
-  while (1)
-  {
-    collectSensor();
-    wheel(-45, 0, 0);
-    if (D2 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(45, 0, 0);
-      delay(230);
-      wheel(0, 0, 0);
-      delay(200);
-      currentLine++;
-      break;
-    }
-  }
-}
+// void findRightLine()
+//{
+//   Serial.println("Find Right Line...");
+//   collectSensor();
+//   wheel(-45, 0, 0);
+//   delay(200);
+//   while (1)
+//   {
+//     collectSensor();
+//     wheel(-45, 0, 0);
+//     if (D2 == HIGH)
+//     {
+//       Serial.println("Line Found");
+//       wheel(45, 0, 0);
+//       delay(230);
+//       wheel(0, 0, 0);
+//       delay(200);
+//       currentLine++;
+//       break;
+//     }
+//   }
+// }
 
-void findLeftLine()
-{
-  collectSensor();
-  Serial.println("Find Left Line...");
-  wheel(45, 0, 0);
-  delay(200);
-  while (1)
-  {
-    collectSensor();
-    wheel(45, 0, 0);
-    if (D2 == HIGH)
-    {
-      Serial.println("Line Found");
-      wheel(-45, 0, 0);
-      delay(230);
-      wheel(0, 0, 0);
-      delay(200);
-      currentLine--;
-      break;
-    }
-  }
-}
+// void findLeftLine()
+//{
+//   collectSensor();
+//   Serial.println("Find Left Line...");
+//   wheel(45, 0, 0);
+//   delay(200);
+//   while (1)
+//   {
+//     collectSensor();
+//     wheel(45, 0, 0);
+//     if (D2 == HIGH)
+//     {
+//       Serial.println("Line Found");
+//       wheel(-45, 0, 0);
+//       delay(230);
+//       wheel(0, 0, 0);
+//       delay(200);
+//       currentLine--;
+//       break;
+//     }
+//   }
+// }
 
 void lift_up(int s)
 { //리프트 up 함수
@@ -309,7 +269,6 @@ void turn()
   wheel(0, 0, 25);
   while (1)
   {
-    collectSensor();
     // 아날로그 센서 사용
     if (a2 - errorRange >= a1)
     {
@@ -388,40 +347,79 @@ void Direction_move(int direc, int cnt)
 }
 
 // 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
-void lineTracing()
+void lineTracing(int direc)
 {
   bool D2, D3, D4, D5;
-  while (true)
+  int A1, A2;
+  if (direc == 1)
   {
-    D2 = prizm.readLineSensor(2);
-    D3 = prizm.readLineSensor(3);
-    D4 = prizm.readLineSensor(4);
-    D5 = prizm.readLineSensor(5);
-
-    //== 라인트레이싱 ==//
-    // D3 = true, D4 = false
-    if (D3 && !D4)
+    while (true)
     {
-      wheel(-20, 0, -9);
+      D2 = prizm.readLineSensor(2);
+      D3 = prizm.readLineSensor(3);
+      A2 = prizm.analogRead(A2);
+
+      //== 라인트레이싱 ==//
+      // D2 = true, D3 = false
+      if (D2 && !D3)
+      {
+        wheel(-20, 0, -9);
+      }
+
+      // D2 = false, D3 = true
+      else if (!D2 && D3)
+      {
+        wheel(-20, 0, 9);
+      }
+
+      // D2 = false, D3 = false
+      else if (!D2 && !D3)
+      {
+        wheel(-40, 0, 0);
+      }
+
+      // 교차로 만나면 라인트레이싱 끝
+      if (A2 > 300)
+      {
+        wheel(0, 0, 0);
+        return;
+      }
     }
+  }
 
-    // D3 = false, D4 = true
-    else if (!D3 && D4)
+  if (direc == -1)
+  {
+    while (true)
     {
-      wheel(-20, 0, 9);
-    }
+      D4 = prizm.readLineSensor(4);
+      D5 = prizm.readLineSensor(5);
+      A3 = prizm.analogRead(A3);
 
-    // D3 = false, D4 = false
-    else if (!D3 && !D4)
-    {
-      wheel(-40, 0, 0);
-    }
+      //== 라인트레이싱 ==//
+      // D4 = true, D5 = false
+      if (D4 && !D5)
+      {
+        wheel(20, 0, -9);
+      }
 
-    // 교차로 만나면 라인트레이싱 끝
-    if (D2 || D5)
-    {
-      wheel(0, 0, 0);
-      return;
+      // D4 = false, D5 = true
+      else if (!D4 && D5)
+      {
+        wheel(20, 0, 9);
+      }
+
+      // D4 = false, D5 = false
+      else if (!D4 && !D5)
+      {
+        wheel(40, 0, 0);
+      }
+
+      // 교차로 만나면 라인트레이싱 끝
+      if (A3 > 300)
+      {
+        wheel(0, 0, 0);
+        return;
+      }
     }
   }
 }
@@ -509,163 +507,140 @@ void back(int time)
   //  }
 }
 
-// 가운데 맞추는 코드
-void center()
-{
-  int errorRange = 80;
-  int onLine = 250;      // 아날로그 센서가 줄 위에 있을 때의 센서 최소값
-  int checkTime = 500;   // 이 숫자를 올리면 줄을 찾는 반경이 넓어짐
-  bool isCenter = false; // 중앙(D2) 확인
-  bool isMiddle = false; // 중간(a1, a2)확인
+//// 가운데 맞추는 코드
+// void center()
+//{
+//   int errorRange = 80;
+//   int onLine = 250;      // 아날로그 센서가 줄 위에 있을 때의 센서 최소값
+//   int checkTime = 500;   // 이 숫자를 올리면 줄을 찾는 반경이 넓어짐
+//   bool isCenter = false; // 중앙(D2) 확인
+//   bool isMiddle = false; // 중간(a1, a2)확인
+//
+//   //== 1. 중앙 맞추기 ==//
+//   while (!isCenter)
+//   {
+//     if (D2 == HIGH)
+//     {
+//       isCenter = true;
+//     }
+//     else if (D2 == LOW)
+//     {
+//       // 오른쪽 탐색
+//       int start = millis();
+//       int end = millis();
+//       while (1)
+//       {
+//         end = millis();
+//         if (end - start >= checkTime || isCenter)
+//         {
+//           wheel(0, 0, 0);
+//           break;
+//         }
+//         wheel(30, 0, 0);
+//         if (D2 == HIGH)
+//         {
+//           isCenter = true;
+//         }
+//       }
+//
+//       // 왼쪽 탐색
+//       start = millis();
+//       end = millis();
+//       while (1)
+//       {
+//         end = millis();
+//         if (end - start >= checkTime * 2 || isCenter)
+//         {
+//           wheel(0, 0, 0);
+//           break;
+//         }
+//         wheel(-30, 0, 0);
+//         collectSensor();
+//         if (D2 == HIGH)
+//         {
+//           isCenter = true;
+//         }
+//       }
+//     }
+//   }
 
-  collectSensor();
-
-  //== 1. 중앙 맞추기 ==//
-  while (!isCenter)
-  {
-    if (D2 == HIGH)
-    {
-      isCenter = true;
-    }
-    else if (D2 == LOW)
-    {
-      // 오른쪽 탐색
-      int start = millis();
-      int end = millis();
-      while (1)
-      {
-        end = millis();
-        if (end - start >= checkTime || isCenter)
-        {
-          wheel(0, 0, 0);
-          break;
-        }
-        wheel(30, 0, 0);
-        collectSensor();
-        if (D2 == HIGH)
-        {
-          isCenter = true;
-        }
-      }
-
-      // 왼쪽 탐색
-      start = millis();
-      end = millis();
-      while (1)
-      {
-        end = millis();
-        if (end - start >= checkTime * 2 || isCenter)
-        {
-          wheel(0, 0, 0);
-          break;
-        }
-        wheel(-30, 0, 0);
-        collectSensor();
-        if (D2 == HIGH)
-        {
-          isCenter = true;
-        }
-      }
-    }
-  }
-
-  //== 2. 중간 맞추기 ==//
-
-  while (!isMiddle)
-  {
-    collectSensor();
-
-    // 두 센서중에 하나라도 줄을 감지한다면
-    if (a1 >= onLine || a2 >= onLine)
-    {
-
-      if (a1 >= a2 - errorRange && a1 - errorRange <= a2) // 두 센서 사이에 줄이 있음 => 성공
-      {
-        isMiddle = true;
-        Serial.println("완성");
-        wheel(0, 0, 0);
-        break;
-      }
-
-      else if (a1 < a2 - errorRange) // 오른쪽 센서 값이 더 클 때
-      {
-        Serial.println("D2 감지 | A2 감지 됨");
-        wheel(0, 0, 15);
-      }
-
-      else if (a1 - errorRange > a2) // 왼쪽 센서 값이 더 클 때
-      {
-        Serial.println("D2 감지 | A1 감지 됨");
-        wheel(0, 0, -15);
-      }
-    }
-
-    else // 줄에서 벗어나 있는 경우
-    {
-      // 오른쪽 탐색
-      bool isFindLine = false;
-      int start = millis();
-      int end = millis();
-      while (!isFindLine)
-      {
-        while (1)
-        {
-          if (a2 > onLine)
-          {
-            isFindLine = true;
-          }
-          end = millis();
-
-          if (end - start >= checkTime || isFindLine)
-          {
-            break;
-          }
-
-          wheel(0, 0, 25);
-          collectSensor();
-        }
-
-        // 왼쪽 탐색
-        start = millis();
-        end = millis();
-        while (1)
-        {
-          if (a1 > onLine)
-          {
-            isFindLine = true;
-          }
-          end = millis();
-          if (end - start >= checkTime * 2 || isFindLine)
-          {
-            break;
-          }
-          wheel(0, 0, -25);
-          collectSensor();
-        }
-      }
-    }
-  }
-}
-
-// 센서 값 읽는 함수, 아날로그는 a2 값 기준
-void collectSensor()
-{
-  a1 = analogRead(A1) + diff;
-  a2 = analogRead(A2);
-  D2 = prizm.readLineSensor(2);
-  D3 = prizm.readLineSensor(3);
-  D4 = prizm.readLineSensor(4);
-  //  Serial.print("a1: ");
-  //  Serial.print(a1);
-  //  Serial.print(" / a2: ");
-  //  Serial.print(a2);
-  //  Serial.print(" / D2: ");
-  //  Serial.print(D2);
-  //  Serial.print(" / D3: ");
-  //  Serial.print(D3);
-  //  Serial.print(" / D4: ");
-  //  Serial.println(D4);
-}
+//  //== 2. 중간 맞추기 ==//
+//
+//  while (!isMiddle)
+//  {
+//    collectSensor();
+//
+//    // 두 센서중에 하나라도 줄을 감지한다면
+//    if (a1 >= onLine || a2 >= onLine)
+//    {
+//
+//      if (a1 >= a2 - errorRange && a1 - errorRange <= a2) // 두 센서 사이에 줄이 있음 => 성공
+//      {
+//        isMiddle = true;
+//        Serial.println("완성");
+//        wheel(0, 0, 0);
+//        break;
+//      }
+//
+//      else if (a1 < a2 - errorRange) // 오른쪽 센서 값이 더 클 때
+//      {
+//        Serial.println("D2 감지 | A2 감지 됨");
+//        wheel(0, 0, 15);
+//      }
+//
+//      else if (a1 - errorRange > a2) // 왼쪽 센서 값이 더 클 때
+//      {
+//        Serial.println("D2 감지 | A1 감지 됨");
+//        wheel(0, 0, -15);
+//      }
+//    }
+//
+//    else // 줄에서 벗어나 있는 경우
+//    {
+//      // 오른쪽 탐색
+//      bool isFindLine = false;
+//      int start = millis();
+//      int end = millis();
+//      while (!isFindLine)
+//      {
+//        while (1)
+//        {
+//          if (a2 > onLine)
+//          {
+//            isFindLine = true;
+//          }
+//          end = millis();
+//
+//          if (end - start >= checkTime || isFindLine)
+//          {
+//            break;
+//          }
+//
+//          wheel(0, 0, 25);
+//          collectSensor();
+//        }
+//
+//        // 왼쪽 탐색
+//        start = millis();
+//        end = millis();
+//        while (1)
+//        {
+//          if (a1 > onLine)
+//          {
+//            isFindLine = true;
+//          }
+//          end = millis();
+//          if (end - start >= checkTime * 2 || isFindLine)
+//          {
+//            break;
+//          }
+//          wheel(0, 0, -25);
+//          collectSensor();
+//        }
+//      }
+//    }
+//  }
+//}
 
 // 노란색기둥말고 가장 앞쪽에서 가까운 오브젝트 라인 찾는 함수
 void shfkstorakfrhwjrwo()
@@ -693,35 +668,19 @@ void shfkstorakfrhwjrwo()
 
 void objectLiftup()
 {
-  while (1)
-  {
-    //    lineTracing();
-    if (prizm.readSonicSensorCM(A1) > 8.5) // 초음파 센서 거리가 --정도일 때
-    {
-      wheel(0, 0, 0);
-      break;
-    }
-  }
+  fowardToBlock();
   objectGrab();
   lift_up(1000); // lift 아주 살짝 올려주기
-  //  back();    // 시간 넣어주기
+  backwardFromBlock();
   // 오브젝트 리프트업을 위한 전진과 리프트업 하고 뒤에까지 오기
 }
 
 void objectLiftdown()
 {
-  while (1)
-  {
-    //    lineTracing();
-    if (prizm.readSonicSensorCM(A1) > 8.5) // 초음파 센서 거리가 --정도일 때
-    {
-      wheel(0, 0, 0);
-      break;
-    }
-  }
+  fowardToBlock();
   lift_down(n); // lift 올린만큼 내려주기
   objectDrop();
-  //  back(); // 시간 넣어주기
+  backwardFromBlock();
   // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
 }
 
