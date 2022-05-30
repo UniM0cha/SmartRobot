@@ -53,11 +53,11 @@ int A = 0;
 // 처음 기둥 위치
 // {1번줄{왼쪽, 오른쪽}, 2번줄{왼쪽, 오른쪽}, 3번줄{왼쪽, 오른쪽}, 4번줄{왼쪽, 오른쪽}, 5번줄{왼쪽, 오른쪽}}
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
-int columnBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}; //한번 결정되면 그 자리 고정
+int columnBlock[5][2] = {{0, 0}, {2, 0}, {0, 1}, {4, 0}, {0, 3}}; //한번 결정되면 그 자리 고정
 
 // 오브젝트의 위치
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3
-int objectBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+int objectBlock[5][2] = {{0, 0}, {3, 0}, {0, 2}, {0, 0}, {0, 1}};
 
 // 적재해야하는 오브젝트의 색 배열
 // 빨간색 = 1, 초록색 = 2, 파란색 = 3
@@ -83,19 +83,19 @@ void loop()
 
   //  start();              // 구현해야함 //정윤이가 구현해놓음
   //  qodufcodnrl();        // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
-  //  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 끝 쪽 기둥 탐색 후 이동 //
-  //  vkseks();             // 바로 앞에 있는 기둥의 색을 저장해놓기 //
-  //  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
-  //  findYellowColumn();   // 노란색 기둥을 향해 이동 //
-  //  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
-  //  for (int i = 0; i < 3; i++)
-  //  {
-  //   flagColorLine(objectColumnFlag[i]);     // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
-  //    vkseks();                              // 현재 서 있는 라인과 방향의 기둥색 가져오기
-  //    objectLiftup();                        // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-  //    findTargetColumn(objectFlag);          // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
-  //    objectLiftdown();                      // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-  //  }
+  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
+  vkseks();             // 바로 앞에 있는 기둥의 색을 저장해놓기 //
+  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
+  findYellowColumn();   // 노란색 기둥을 향해 이동 //
+  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
+  for (int i = 0; i < 3; i++)
+  {
+    flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
+    vkseks();                           // 현재 서 있는 라인과 방향의 기둥색 가져오기
+    objectLiftup();                     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    findTargetColumn(objectFlag);       // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
+    objectLiftdown();                   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  }
   //  finish(); // 구현해야함
 }
 
@@ -135,11 +135,11 @@ void start()
 /**
  * @brief 다음 교차로까지 이동하는 함수
  */
-CrossType findNextCross()
-{
-  lineTracing();
-  return checkCross();
-}
+// CrossType findNextCross()
+//{
+//     lineTracing();
+//     return checkCross();
+// }
 
 /**
  * @brief 블록 가까이 다가가는 함수
@@ -490,21 +490,21 @@ void turnLeft()
 }
 
 // 뒤로 간다음 중간 맞춤
-void back(int time)
-{
-  Serial.println("back...");
-  wheel(0, 50, 0);
-  delay(time);
-  wheel(0, 0, 0);
-  center();
-  //  if (currentFlag == 0)
-  //  {
-  //    currentLineFlag = 1;
-  //  }
-  //  else
-  //  {
-  //    currentLineFlag = 0;
-  //  }
+// void back(int time)
+//{
+//  Serial.println("back...");
+//  wheel(0, 50, 0);
+//  delay(time);
+//  wheel(0, 0, 0);
+//  center();
+//  if (currentFlag == 0)
+//  {
+//    currentLineFlag = 1;
+//  }
+//  else
+//  {
+//    currentLineFlag = 0;
+//  }
 }
 
 //// 가운데 맞추는 코드
@@ -661,7 +661,9 @@ void shfkstorakfrhwjrwo()
       }
     }
     if (forflag == 1)
+    {
       break;
+    }
   }
   Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
