@@ -78,27 +78,6 @@ void setup()
   }
 }
 
-void loop()
-{
-
-  //  start();              // 구현해야함 //정윤이가 구현해놓음
-  //  qodufcodnrl();        // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
-  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
-  vkseks();             // 바로 앞에 있는 기둥의 색을 저장해놓기 //
-  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
-  findYellowColumn();   // 노란색 기둥을 향해 이동 //
-  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
-  for (int i = 0; i < 3; i++)
-  {
-    flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
-    vkseks();                           // 현재 서 있는 라인과 방향의 기둥색 가져오기
-    objectLiftup();                     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-    findTargetColumn(objectFlag);       // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
-    objectLiftdown();                   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-  }
-  //  finish(); // 구현해야함
-}
-
 /**
  * @brief 시작지점 -> 경기장 이동하는 코드
  */
@@ -135,11 +114,11 @@ void start()
 /**
  * @brief 다음 교차로까지 이동하는 함수
  */
-// CrossType findNextCross()
-//{
-//     lineTracing();
-//     return checkCross();
-// }
+CrossType findNextCross(int direc)
+{
+  lineTracing(direc);
+  return checkCross();
+}
 
 /**
  * @brief 블록 가까이 다가가는 함수
@@ -276,7 +255,7 @@ void turn()
       break;
     }
   }
-  center();
+  // center();
 }
 
 void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
@@ -331,11 +310,11 @@ void Direction_move(int direc, int cnt)
   { //이동 횟수에 따른 반복문
     if (direc == 1)
     {
-      findRightLine();
+      findNextCross(1);
     }
     else if (direc == -1)
     {
-      findLeftLine();
+      findNextCross(-1);
     }
     else
     {
@@ -350,14 +329,14 @@ void Direction_move(int direc, int cnt)
 void lineTracing(int direc)
 {
   bool D2, D3, D4, D5;
-  int A1, A2;
+  int a1, a2;
   if (direc == 1)
   {
     while (true)
     {
       D2 = prizm.readLineSensor(2);
       D3 = prizm.readLineSensor(3);
-      A2 = prizm.analogRead(A2);
+      a1 = analogRead(A1);
 
       //== 라인트레이싱 ==//
       // D2 = true, D3 = false
@@ -379,7 +358,7 @@ void lineTracing(int direc)
       }
 
       // 교차로 만나면 라인트레이싱 끝
-      if (A2 > 300)
+      if (a1 > 300)
       {
         wheel(0, 0, 0);
         return;
@@ -387,13 +366,13 @@ void lineTracing(int direc)
     }
   }
 
-  if (direc == -1)
+  else if (direc == -1)
   {
     while (true)
     {
       D4 = prizm.readLineSensor(4);
       D5 = prizm.readLineSensor(5);
-      A3 = prizm.analogRead(A3);
+      a2 = analogRead(A2);
 
       //== 라인트레이싱 ==//
       // D4 = true, D5 = false
@@ -415,7 +394,7 @@ void lineTracing(int direc)
       }
 
       // 교차로 만나면 라인트레이싱 끝
-      if (A3 > 300)
+      if (a2 > 300)
       {
         wheel(0, 0, 0);
         return;
@@ -505,7 +484,7 @@ void turnLeft()
 //  {
 //    currentLineFlag = 0;
 //  }
-}
+//}
 
 //// 가운데 맞추는 코드
 // void center()
@@ -854,4 +833,25 @@ void qodufcodnrl()
     Direction_move(RIGHT, 1);
     colorvksquf();
   }
+}
+
+void loop()
+{
+
+  //  start();              // 구현해야함 //정윤이가 구현해놓음
+  //  qodufcodnrl();        // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
+  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
+  vkseks();             // 바로 앞에 있는 기둥의 색을 저장해놓기 //
+  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
+  findYellowColumn();   // 노란색 기둥을 향해 이동 //
+  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
+  for (int i = 0; i < 3; i++)
+  {
+    flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
+    vkseks();                           // 현재 서 있는 라인과 방향의 기둥색 가져오기
+    objectLiftup();                     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    findTargetColumn(objectFlag);       // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
+    objectLiftdown();                   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  }
+  //  finish(); // 구현해야함
 }
