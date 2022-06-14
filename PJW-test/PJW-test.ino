@@ -420,10 +420,8 @@ void lineTracing(int direc)
 
 /**
  * @brief 만난 교차로가 어떤 모양의 교차로인지 반환하고 교차로의 중간으로 이동
- *
- * @return CrossType
  */
-CrossType checkCross()
+void checkCross()
 {
   bool D2 = false, D5 = false, left = false, right = false;
 
@@ -445,17 +443,9 @@ CrossType checkCross()
   wheel(0, 0, 0);
   delay(100);
 
-  if (left && right)
+  if (left || right)
   {
-    return CROSS;
-  }
-  else if (left && !right)
-  {
-    return LEFT;
-  }
-  else if (!left && right)
-  {
-    return RIGHT;
+    return;
   }
   else
   {

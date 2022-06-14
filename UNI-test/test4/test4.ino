@@ -21,9 +21,6 @@ EXPANSION exc2;
 #define TRUE 1
 #define FALSE 0
 
-// 센서값을 저장할 전역변수
-int a1, a2, D2, D3, D4, diff;
-
 // 현재 리프트 높이
 int n = 0;
 
@@ -73,15 +70,22 @@ void setup()
 
 void loop()
 {
-    start();
-    // scanAll();
+    // start();
+    rightLineTracing();
+    // leftLineTracing();
+    Direction_find(0, 3, 0, 1);
+    Direction_find(3, 4, 1, 1);
+    Direction_find(4, 0, 1, 0);
     prizm.PrizmEnd();
+    // Serial.println(analogRead(A1));
 }
 
 /**
+ * 은쪽이
  * @param x +좌 / -우
  * @param y +후 / -전
  * @param z +우회전 / -좌회전
+ *
  */
 void wheel(int x, int y, int z)
 {
@@ -93,8 +97,27 @@ void wheel(int x, int y, int z)
     D = (x * 0.5) + (y * 0.5 * -1) + (z * 0.841471);
 
     exc1.setMotorPowers(1, A, B);
-    exc2.setMotorPowers(2, C, D);
+    exc2.setMotorPowers(3, C, D);
 }
+
+// /**
+//  * 금쪽이
+//  * @param x +좌 / -우
+//  * @param y +후 / -전
+//  * @param z +우회전 / -좌회전
+//  */
+// void wheel(int x, int y, int z)
+// {
+//     int A = 0, B = 0, C = 0, D = 0;
+
+//     A = (x * 0.5) + (y * 0.5) + (z * 0.841471);
+//     B = (x * 0.5 * -1) + (y * 0.5) + (z * 0.841471);
+//     C = (x * 0.5 * -1) + (y * 0.5 * -1) + (z * 0.841471);
+//     D = (x * 0.5) + (y * 0.5 * -1) + (z * 0.841471);
+
+//     exc1.setMotorPowers(1, A, B);
+//     exc2.setMotorPowers(2, C, D);
+// }
 
 /**
  * @brief 시작지점 -> 경기장 이동하는 코드
@@ -105,7 +128,7 @@ void start()
     delay(1200);
     wheel(-50, 0, 0);
     delay(500);
-    bool D3 = false;
+    bool D2 = false;
     while (true)
     {
         D2 = prizm.readLineSensor(2);
@@ -117,26 +140,17 @@ void start()
         }
     }
 
-    bool D2 = false;
+    D2 = false;
     while (true)
     {
         D2 = prizm.readLineSensor(2);
         if (D2)
         {
-            delay(100);
+            // delay(100);
             wheel(0, 0, 0);
             break;
         }
     }
-}
-
-/**
- * @brief 다음 교차로까지 이동하는 함수
- */
-void findNextCross()
-{
-    lineTracing();
-    checkCross();
 }
 
 /**
@@ -191,7 +205,7 @@ void turn()
     wheel(0, 0, 30);
     while (true)
     {
-        if (prizm.readLineSensor(4))
+        if (prizm.readLineSensor(3))
         {
             delay(150);
             wheel(0, 0, 0);
@@ -205,155 +219,165 @@ void turn()
  * @brief 경로를 찾아서 이동하는 함수
  *
  * @param now_line 현재 서있는 라인
- * @param next 목적지 라인
- * @param currentFlag 현재 보고있는 방향
- * @param targetFlag 봐야하는 방향
+ * @param dest_line 목적지 라인
+ * @param now_face 현재 보고있는 방향
+ * @param dest_face 봐야하는 방향
  */
-void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
+void Direction_find(int now_line, int dest_line, int now_face, int dest_face)
 {
     // 0번쪽을 보고 있으면 우측이동 = 줄 증가
     // 1번쪽을 보고 있으면 우측이동 = 줄 감소
 
-    int moveCnt;
+    // move 음수 = 오른쪽 이동
+    // move 양수 = 왼쪽 이동
+    int move = 0;
     // 0번쪽을 보고 있을 때
-    if (!currentFlag)
+    if (now_face == 0)
     {
-        moveCnt = next - now_line;
+        move = now_line - dest_line;
     }
     // 1번쪽을 보고 있을 때
     else
     {
-        moveCnt = now_line - next;
+        move = dest_line - now_line;
     }
-    int absCnt = abs(moveCnt);
+    int moveAbs = abs(move);
 
     // 지금 보는 방향과 봐야하는 방향이 다를 경우
-    if (currentFlag ^ targetFlag)
+    if (now_face ^ dest_face)
     {
         // 우측 이동
-        if (moveCnt >= 0)
+        if (move < 0)
         {
-            for (int i = 0; i < absCnt; i++)
+            for (int i = 0; i < moveAbs; i++)
             {
-                findNextCross();
+                rightLineTracing();
             }
-            turn();
-            return;
         }
 
         // 좌측 이동
-        else
+        else if (move > 0)
         {
-            turn();
-            for (int i = 0; i < absCnt; i++)
+            for (int i = 0; i < moveAbs; i++)
             {
-                findNextCross();
+                leftLineTracing();
             }
-            return;
         }
+        turn();
+        return;
     }
 
     // 지금 보는 방향과 봐야하는 방향이 같은 경우
     else
     {
         // 우측 이동
-        if (moveCnt >= 0)
+        if (move < 0)
         {
-            for (int i = 0; i < absCnt; i++)
+            for (int i = 0; i < moveAbs; i++)
             {
-                findNextCross();
+                rightLineTracing();
             }
-            return;
         }
 
         // 좌측 이동
-        else
+        else if (move > 0)
         {
-            turn();
-            for (int i = 0; i < absCnt; i++)
+            for (int i = 0; i < moveAbs; i++)
             {
-                findNextCross();
+                leftLineTracing();
             }
-            turn();
-            return;
         }
+        return;
     }
 }
 
 /**
- * @brief 줄 위에 서있는 상태에서 T자 구간에 도착할 때까지 라인트레이싱을 하면서 전진 반복
+ * @brief 줄 위에 서있는 상태에서 교차로 중간에 갈 때까지 라인트레이싱을 하면서 오른쪽 이동
  */
-void lineTracing()
+void rightLineTracing()
 {
-    bool D2, D3, D4, D5;
+    bool D2, D3;
+    int a1;
+
     while (true)
     {
         D2 = prizm.readLineSensor(2);
         D3 = prizm.readLineSensor(3);
-        D4 = prizm.readLineSensor(4);
-        D5 = prizm.readLineSensor(5);
+        a1 = analogRead(A1);
+
+        // 교차로 만나면 라인트레이싱 끝
+        if (a1 > 300)
+        {
+            wheel(-40, 0, 0);
+            delay(350);
+            wheel(0, 0, 0);
+            delay(100);
+            return;
+        }
 
         //== 라인트레이싱 ==//
-        // D3 = true, D4 = false
-        if (D3 && !D4)
+        // D2 = true, D3 = false
+        else if (D2 && !D3)
         {
             wheel(-20, 0, -9);
         }
 
-        // D3 = false, D4 = true
-        else if (!D3 && D4)
+        // D2 = false, D3 = true
+        else if (!D2 && D3)
         {
             wheel(-20, 0, 9);
         }
 
-        // D3 = false, D4 = false
-        else if (!D3 && !D4)
+        // D2 = false, D3 = false
+        else if (!D2 && !D3)
         {
             wheel(-40, 0, 0);
-        }
-
-        // 교차로 만나면 라인트레이싱 끝
-        if (D2 || D5)
-        {
-            wheel(0, 0, 0);
-            return;
         }
     }
 }
 
 /**
- * @brief 만난 교차로가 어떤 모양의 교차로인지 반환하고 교차로의 중간으로 이동
+ * @brief 줄 위에 서있는 상태에서 교차로 중간에 갈 때까지 라인트레이싱을 하면서 왼쪽 이동
  */
-void checkCross()
+void leftLineTracing()
 {
-    bool D2 = false, D5 = false, left = false, right = false;
+    bool D4, D5;
+    int a2;
 
-    int start = millis();
-    int end = millis();
-
-    // 교차로의 중간까지 이동하면서 교차로 탐색
-    wheel(-40, 0, 0);
-    while (end - start <= 400)
+    while (true)
     {
-        end = millis();
-        D2 = prizm.readLineSensor(2);
+        D4 = prizm.readLineSensor(4);
         D5 = prizm.readLineSensor(5);
-        if (D2)
-            left = true;
-        if (D5)
-            right = true;
-    }
-    wheel(0, 0, 0);
-    delay(100);
+        a2 = analogRead(A2);
 
-    if (left || right)
-    {
-        return;
-    }
-    else
-    {
-        Serial.println("오류");
-        prizm.PrizmEnd();
+        // 교차로 만나면 라인트레이싱 끝
+        if (a2 > 300)
+        {
+            wheel(40, 0, 0);
+            delay(420);
+            wheel(0, 0, 0);
+            delay(100);
+            return;
+        }
+
+        //== 라인트레이싱 ==//
+        // D4 = true, D5 = false
+        else if (D4 && !D5)
+        {
+            wheel(20, 0, -9);
+        }
+
+        // D4 = false, D5 = true
+        else if (!D4 && D5)
+        {
+            wheel(20, 0, 9);
+        }
+
+        // D4 = false, D5 = false
+        else if (!D4 && !D5)
+        {
+            wheel(40, 0, 0);
+        }
     }
 }
 
