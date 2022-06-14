@@ -13,6 +13,7 @@ EXPANSION exc2;
 #define RED 1
 #define GREEN 2
 #define BLUE 3
+#define YELLOW 4
 
 enum CrossType
 {
@@ -626,14 +627,17 @@ void turnLeft()
 //  }
 //}
 
-// 노란색기둥말고 가장 앞쪽에서 가까운 오브젝트 라인 찾는 함수
-void shfkstorakfrhwjrwo()
+/**
+ * @brief 노란색기둥말고 가장 앞쪽에서 가까운 오브젝트 라인 찾는 함수
+ */
+void findFirstTarget()
 {
   int forflag = 0;
   for (int i = 0; i <= 4; i++)
   {
     for (int j = 0; j <= 1; j++)
     {
+      // 기둥이 빨간색, 초록색, 파란색인 경우
       if (columnBlock[i][j] == 1 || columnBlock[i][j] == 2 || columnBlock[i][j] == 3)
       {
         targetLine = i;
@@ -679,6 +683,9 @@ void vkseks()
   objectFlagCount++;
 }
 
+/**
+ * @brief 노란색 기둥을 찾아서 이동하는 함수
+ */
 void findYellowColumn()
 {
   int forflag = 0;
@@ -703,6 +710,11 @@ void findYellowColumn()
   Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
+/**
+ * @brief 매개변수로 주어진 기둥을 찾아서 이동하는 함수
+ *
+ * @param targetObject 찾을 오브젝트 값
+ */
 void findTargetColumn(int targetObject)
 {
   int forflag = 0;
@@ -727,7 +739,11 @@ void findTargetColumn(int targetObject)
   Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
-//
+/**
+ * @brief 매개변수로 주어진 오브젝트를 찾아서 이동하는 함수
+ *
+ * @param colorNum
+ */
 void flagColorLine(int colorNum)
 {
   Serial.println(colorNum);
@@ -770,7 +786,10 @@ void finish()
   // 끝라인에서 피니쉬 들어가기
 }
 
-void colorvksquf()
+/**
+ * @brief 허스키렌즈를 사용하여 색깔 판별 후 columnBlock과 objectBlock에 값 채워넣는 함수
+ */
+void colorCheck()
 {
   if (!huskylens.request())
     Serial.println(F("Fail to request data from HUSKYLENS, recheck the connection!"));
@@ -804,6 +823,9 @@ void colorvksquf()
   }
 }
 
+/**
+ * @brief 허스키 렌즈로 얻은 result를 시리얼 출력하는 함수
+ */
 void printResult(HUSKYLENSResult result)
 {
   if (result.command == COMMAND_RETURN_BLOCK)
@@ -820,7 +842,10 @@ void printResult(HUSKYLENSResult result)
   }
 }
 
-void checkBlock()
+/**
+ * @brief objectBlock 배열에 들어있는 값 출력
+ */
+void printObject()
 {
 
   for (int j = 0; j <= 4; j++)
@@ -834,18 +859,21 @@ void checkBlock()
   }
 }
 
+/**
+ * @brief 처음 배열을 채우는 함수
+ */
 void qodufcodnrl()
 {
   for (int i = 0; i < 4; i++)
   {
     Direction_move(1, 1);
-    colorvksquf();
+    colorCheck();
   }
   turn();
   for (int j = 4; j > 0; j--)
   {
     Direction_move(RIGHT, 1);
-    colorvksquf();
+    colorCheck();
   }
 }
 
@@ -854,11 +882,11 @@ void loop()
 
   //  start();              // 구현해야함 //정윤이가 구현해놓음
   //  qodufcodnrl();        // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
-  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
-  vkseks();             // 바로 앞에 있는 기둥의 색을 저장해놓기 //
-  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
-  findYellowColumn();   // 노란색 기둥을 향해 이동 //
-  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
+  findFirstTarget();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
+  vkseks();           // 바로 앞에 있는 기둥의 색을 저장해놓기 //
+  objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
+  findYellowColumn(); // 노란색 기둥을 향해 이동 //
+  objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
   for (int i = 0; i < 3; i++)
   {
     Serial.println("for문");
