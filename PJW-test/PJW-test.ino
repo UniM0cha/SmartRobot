@@ -676,7 +676,7 @@ void objectLiftdown()
 }
 
 // 바로앞에 있는 오브젝트기둥의 색깔 판별
-void vkseks()
+void columnStack()
 {
   objectColumnFlag[objectFlagCount] = columnBlock[currentLine][currentLineFlag];
   Serial.println(objectColumnFlag[objectFlagCount]);
@@ -883,7 +883,7 @@ void loop()
   //  start();              // 구현해야함 //정윤이가 구현해놓음
   //  qodufcodnrl();        // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
   findFirstTarget();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
-  vkseks();           // 바로 앞에 있는 기둥의 색을 저장해놓기 //
+  columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기 //
   objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
   findYellowColumn(); // 노란색 기둥을 향해 이동 //
   objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
@@ -892,7 +892,7 @@ void loop()
     Serial.println("for문");
     flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
     Serial.println("1-1");
-    vkseks(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
+    columnStack(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
     Serial.println("1-2");
     objectLiftup(); // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
     Serial.println("1-3");

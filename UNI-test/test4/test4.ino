@@ -12,7 +12,7 @@ EXPANSION exc2;
 // 금쪽이면 1, 은쪽이면 2
 #define GOLD 1
 #define SILVER 2
-#define ROBOT GOLD
+#define ROBOT SILVER
 
 #define RED 1
 #define GREEN 2
@@ -24,6 +24,8 @@ EXPANSION exc2;
 
 // 현재 리프트 높이
 int n = 0;
+// 현재 Grab 넓이
+int m = 0;
 
 // 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄 / 3 = 네번째줄 / 4 = 다섯번째줄
 // 현재 자신이 있는 줄
@@ -38,11 +40,21 @@ int currentLineFlag = 0;
 // 처음 기둥 위치
 // {1번줄{왼쪽, 오른쪽}, 2번줄{왼쪽, 오른쪽}, 3번줄{왼쪽, 오른쪽}, 4번줄{왼쪽, 오른쪽}, 5번줄{왼쪽, 오른쪽}}
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
-int columnBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}; //한번 결정되면 그 자리 고정
+int columnBlock[5][2] = {
+    {0, 0},
+    {2, 0},
+    {0, 1},
+    {4, 0},
+    {0, 3}}; //한번 결정되면 그 자리 고정
 
 // 오브젝트의 위치
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3
-int objectBlock[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+int objectBlock[5][2] = {
+    {0, 0},
+    {3, 0},
+    {0, 2},
+    {0, 0},
+    {0, 1}};
 
 // 적재해야하는 오브젝트의 색 배열
 // 빨간색 = 1, 초록색 = 2, 파란색 = 3
@@ -74,18 +86,17 @@ void loop()
 {
     start();
     scanAll();
-    findFirstColumn(); // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
-    // TODO: 정우꺼 코드 계속 해석해야함
-    vkseks();           // 바로 앞에 있는 기둥의 색을 저장해놓기 //
-    objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
-    findYellowColumn(); // 노란색 기둥을 향해 이동 //
-    objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
+    findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
+    columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기
+    objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    findYellowColumn(); // 노란색 기둥을 향해 이동
+    objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
     for (int i = 0; i < 3; i++)
     {
         Serial.println("for문");
         flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
         Serial.println("1-1");
-        vkseks(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
+        columnStack(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
         Serial.println("1-2");
         objectLiftup(); // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
         Serial.println("1-3");
@@ -94,7 +105,7 @@ void loop()
         objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
         Serial.println("1-5");
     }
-    //  finish(); // 구현해야함
+    finish(); // 구현해야함
 
     prizm.PrizmEnd();
 }
@@ -182,6 +193,9 @@ void finish()
 void fowardToBlock()
 {
     Serial.println("앞으로");
+    wheel(0, -30, 0);
+    delay(1000);
+    wheel(0, 0, 0);
     // TODO: 구현해야함
     // wheel(0, -30, 0);
     // int a1 = prizm.readSonicSensorCM(A1);
@@ -205,6 +219,9 @@ void fowardToBlock()
 void backwardFromBlock()
 {
     Serial.println("뒤로");
+    wheel(0, 30, 0);
+    delay(1000);
+    wheel(0, 0, 0);
     // TODO: 구현해야함
     // wheel(0, 30, 0);
     // int a1 = prizm.readSonicSensorCM(A1);
@@ -236,7 +253,8 @@ void turn()
             delay(150);
             wheel(0, 0, 0);
             delay(100);
-            currentLineFlag = ~currentLineFlag;
+            currentLineFlag = !currentLineFlag;
+            Serial.println(String() + F("currentLineFlag = ") + currentLineFlag);
             return;
         }
     }
@@ -252,6 +270,7 @@ void turn()
  */
 void directionFind(int currentLine, int targetLine, int currentFace, int destFace)
 {
+    Serial.println(String() + F("directionFind()\ncurrentLine : ") + currentLine + F("\ntargetLine : ") + targetLine + F("\ncurrentFace : ") + currentFace + F("\ndestFace : ") + destFace);
     // 0번쪽을 보고 있으면 우측이동 = 줄 증가
     // 1번쪽을 보고 있으면 우측이동 = 줄 감소
 
@@ -436,18 +455,18 @@ void scanAll()
     {
         // 0번 줄에서 4번 줄까지
         directionFind(currentLine, i, currentLineFlag, 0);
-        colorCheck();
+        // colorCheck();
     }
 
     // 4번줄에서 턴
     directionFind(4, 4, 0, 1);
-    colorCheck();
+    // colorCheck();
 
     for (int i = 3; i >= 1; i--)
     {
         // 4번 줄에서 1번 줄까지
         directionFind(currentLine, i, currentLineFlag, 1);
-        colorCheck();
+        // colorCheck();
     }
 }
 
@@ -456,6 +475,7 @@ void scanAll()
  */
 void colorCheck()
 {
+    Serial.println("Color Checking...");
     if (!huskylens.request())
         Serial.println(F("Fail to request data from HUSKYLENS, recheck the connection!"));
     else if (!huskylens.isLearned())
@@ -525,22 +545,6 @@ void printObject()
 }
 
 /**
- * @brief 오브젝트 잡는 함수
- */
-void objectGrab()
-{
-    // TODO: 모터 회전
-}
-
-/**
- * @brief 오브젝트 놓는 함수
- */
-void objectDrop()
-{
-    // TODO: 모터 회전
-}
-
-/**
  * @brief 노란색기둥말고 가장 앞쪽에서 가까운 기둥을 찾아서 이동하는 함수
  */
 void findFirstColumn()
@@ -566,7 +570,6 @@ void findFirstColumn()
             break;
         }
     }
-    Serial.println("find시작");
     directionFind(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
@@ -661,9 +664,67 @@ void flagColorLine(int targetObject)
  * @brief 현재 바라보고 있는 오브젝트의 색깔을 판별하여
  * 다음으로 이동할 기둥 배열에 저장
  */
-void vkseks() // TODO: 함수명 변경해야함
+void columnStack() // TODO: 함수명 변경해야함
 {
     objectColumnFlag[objectFlagCount] = columnBlock[currentLine][currentLineFlag];
     Serial.println(objectColumnFlag[objectFlagCount]);
     objectFlagCount++;
+}
+
+void objectLiftup()
+{
+    fowardToBlock();
+    objectGrab();
+    lift_up(); // lift 아주 살짝 올려주기
+    backwardFromBlock();
+    // 오브젝트 리프트업을 위한 전진과 리프트업 하고 뒤에까지 오기
+}
+
+void objectLiftdown()
+{
+    fowardToBlock();
+    lift_down(); // lift 올린만큼 내려주기
+    objectDrop();
+    backwardFromBlock();
+    // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
+}
+
+/**
+ * @brief 오브젝트 잡는 함수
+ */
+void objectGrab()
+{
+    // TODO: 모터 회전
+    prizm.setMotorSpeed(2, 600);
+    delay(600);
+    prizm.setMotorSpeed(2, 0);
+    delay(100);
+}
+
+/**
+ * @brief 오브젝트 놓는 함수
+ */
+void objectDrop()
+{
+    // TODO: 모터 회전
+    prizm.setMotorSpeed(2, -600);
+    delay(600);
+    prizm.setMotorSpeed(2, 0);
+    delay(100);
+}
+
+void lift_up()
+{ //리프트 up 함수
+    prizm.setMotorSpeed(1, -600);
+    delay(400);
+    prizm.setMotorSpeed(1, 0);
+    delay(100);
+}
+
+void lift_down()
+{ //리프트 down 함수
+    prizm.setMotorSpeed(1, 600);
+    delay(400);
+    prizm.setMotorSpeed(1, 0);
+    delay(100);
 }
