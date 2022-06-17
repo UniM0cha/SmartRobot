@@ -85,7 +85,7 @@ void setup()
 
 void loop()
 {
-    // start();
+    start();
     scanAll();
     findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
     columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기
@@ -162,6 +162,7 @@ void wheel(int x, int y, int z)
  */
 void start()
 {
+    startGrab();
     wheel(-30, -30, 0);
     delay(1200);
     wheel(-50, 0, 0);
@@ -201,7 +202,14 @@ void start()
 void finish()
 {
     directionFind(currentLine, 0, currentLineFlag, 0);
-    // TODO: 끝라인에서 피니쉬 들어가기
+    wheel(50, 0, -1);
+    delay(2400);
+    wheel(0, 0, 0);
+    delay(100);
+    wheel(0, -50, 2);
+    delay(1600);
+    wheel(0, 0, 0);
+    delay(100);
 }
 
 /**
@@ -220,21 +228,9 @@ void fowardToBlock()
     {
         wheel(0, -30, 2);
     }
-    delay(500);
+    delay(700);
     wheel(0, 0, 0);
     // TODO: 구현해야함
-    // wheel(0, -30, 0);
-    // int a1 = prizm.readSonicSensorCM(A1);
-    // while (true)
-    // {
-    //     // 초음파센서 감지
-    //     a1 = prizm.readSonicSensorCM(A1);
-    //     if (a1 <= 4)
-    //     {
-    //         wheel(0, 0, 0);
-    //         break;
-    //     }
-    // }
 }
 
 /**
@@ -254,21 +250,9 @@ void backwardFromBlock()
     {
         wheel(0, 30, -1);
     }
-    delay(500);
+    delay(700);
     wheel(0, 0, 0);
     // TODO: 구현해야함
-    // wheel(0, 30, 0);
-    // int a1 = prizm.readSonicSensorCM(A1);
-    // while (true)
-    // {
-    //     // 초음파센서 감지
-    //     a1 = prizm.readSonicSensorCM(A1);
-    //     if (a1 >= 14)
-    //     {
-    //         wheel(0, 0, 0);
-    //         break;
-    //     }
-    // }
 }
 
 /**
@@ -386,7 +370,7 @@ void directionFind(int currentLine, int targetLine, int currentFace, int destFac
 void rightLineTracing()
 {
     bool D2, D3, crossFlag = false;
-    int a1, start, now;
+    int a1, start, now, v;
 
     while (true)
     {
@@ -398,7 +382,8 @@ void rightLineTracing()
         if (crossFlag == true)
         {
             now = millis();
-            if (now - start >= 350)
+            v = (ROBOT == SILVER ? 350 : 370);
+            if (now - start >= v)
             {
                 wheel(0, 0, 0);
                 delay(100);
@@ -458,7 +443,7 @@ void rightLineTracing()
             }
             else if (ROBOT == GOLD)
             {
-                wheel(-40, 0, 2);
+                wheel(-40, 0, 1);
             }
         }
     }
@@ -482,7 +467,7 @@ void leftLineTracing()
         if (crossFlag == true)
         {
             now = millis();
-            v = (ROBOT == SILVER ? 300 : 350);
+            v = (ROBOT == SILVER ? 300 : 370);
             if (now - start >= v)
             {
                 wheel(0, 0, 0);
@@ -790,6 +775,17 @@ void objectLiftdown()
     objectDrop();
     backwardFromBlock();
     // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
+}
+
+/**
+ * @brief 그랩 초기화
+ */
+void startGrab()
+{
+    prizm.setMotorSpeed(2, -600);
+    delay(700);
+    prizm.setMotorSpeed(2, 0);
+    delay(100);
 }
 
 /**
