@@ -12,7 +12,7 @@ EXPANSION exc2;
 // 금쪽이면 1, 은쪽이면 2
 #define GOLD 1
 #define SILVER 2
-#define ROBOT SILVER
+#define ROBOT GOLD
 
 #define RED 1
 #define GREEN 2
@@ -42,18 +42,18 @@ int currentLineFlag = 0;
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
 int columnBlock[5][2] = {
     {0, 0},
-    {2, 0},
-    {0, 1},
-    {4, 0},
+    {0, 4},
+    {1, 0},
+    {0, 2},
     {0, 3}}; //한번 결정되면 그 자리 고정
 
 // 오브젝트의 위치
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3
 int objectBlock[5][2] = {
     {0, 0},
-    {3, 0},
-    {0, 2},
     {0, 0},
+    {2, 0},
+    {0, 3},
     {0, 1}};
 
 // 적재해야하는 오브젝트의 색 배열
@@ -80,11 +80,12 @@ void setup()
         Serial.println(F("2.Please recheck the connection."));
         delay(100);
     }
+    Serial.println(F("허스키렌즈 연결 완료"));
 }
 
 void loop()
 {
-    start();
+    // start();
     scanAll();
     findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
     columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기
@@ -111,11 +112,22 @@ void loop()
 }
 
 /**
- * 은쪽이
  * @param x +좌 / -우
  * @param y +후 / -전
  * @param z +우회전 / -좌회전
  *
+ * @brief
+ * 은쪽이
+ * 전직진 (0, -40, 0)
+ * 후직진 (0, 40, 0)
+ * 좌직진 (40, 0, -2)
+ * 우직진 (-40, 0, 2)
+ *
+ * 금쪽이
+ * 전직진 (0, -40, 2)
+ * 후직진 (0, 40, -1)
+ * 좌직진 (40, 0, -1)
+ * 우직진 (-40, 0, 1)
  */
 void wheel(int x, int y, int z)
 {
@@ -161,7 +173,14 @@ void start()
         if (D2)
         {
             delay(300);
-            wheel(0, -50, 0);
+            if (ROBOT == SILVER)
+            {
+                wheel(0, -40, 0);
+            }
+            else if (ROBOT == GOLD)
+            {
+                wheel(0, -50, 2);
+            }
             break;
         }
     }
@@ -193,8 +212,15 @@ void finish()
 void fowardToBlock()
 {
     Serial.println("앞으로");
-    wheel(0, -30, 0);
-    delay(1000);
+    if (ROBOT == SILVER)
+    {
+        wheel(0, -30, 0);
+    }
+    else if (ROBOT == GOLD)
+    {
+        wheel(0, -30, 2);
+    }
+    delay(500);
     wheel(0, 0, 0);
     // TODO: 구현해야함
     // wheel(0, -30, 0);
@@ -219,8 +245,16 @@ void fowardToBlock()
 void backwardFromBlock()
 {
     Serial.println("뒤로");
-    wheel(0, 30, 0);
-    delay(1000);
+    if (ROBOT == SILVER)
+    {
+
+        wheel(0, 30, 0);
+    }
+    else if (ROBOT == GOLD)
+    {
+        wheel(0, 30, -1);
+    }
+    delay(500);
     wheel(0, 0, 0);
     // TODO: 구현해야함
     // wheel(0, 30, 0);
@@ -250,7 +284,15 @@ void turn()
     {
         if (prizm.readLineSensor(3))
         {
-            delay(150);
+            if (ROBOT == SILVER)
+            {
+                delay(20);
+            }
+            else if (ROBOT == GOLD)
+            {
+                delay(150);
+            }
+
             wheel(0, 0, 0);
             delay(100);
             currentLineFlag = !currentLineFlag;
@@ -343,8 +385,8 @@ void directionFind(int currentLine, int targetLine, int currentFace, int destFac
  */
 void rightLineTracing()
 {
-    bool D2, D3;
-    int a1;
+    bool D2, D3, crossFlag = false;
+    int a1, start, now;
 
     while (true)
     {
@@ -352,42 +394,72 @@ void rightLineTracing()
         D3 = prizm.readLineSensor(3);
         a1 = analogRead(A1);
 
-        // 교차로 만나면 라인트레이싱 끝
-        if (a1 > 300)
+        // 교차로 중간으로 가기 위한 타이머
+        if (crossFlag == true)
         {
-            wheel(-40, 0, 0);
-            delay(350);
-            wheel(0, 0, 0);
-            delay(100);
+            now = millis();
+            if (now - start >= 350)
+            {
+                wheel(0, 0, 0);
+                delay(100);
 
-            if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
-            {
-                currentLine++;
+                if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
+                {
+                    currentLine++;
+                }
+                else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
+                {
+                    currentLine--;
+                }
+                return;
             }
-            else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
-            {
-                currentLine--;
-            }
-            return;
+        }
+
+        // 교차로 만나면 타이머 작동
+        if (a1 > 200)
+        {
+            crossFlag = true;
+            start = millis();
         }
 
         //== 라인트레이싱 ==//
         // D2 = true, D3 = false
         else if (D2 && !D3)
         {
-            wheel(-20, 0, -9);
+            if (ROBOT == SILVER)
+            {
+                wheel(-20, 0, -4);
+            }
+            else if (ROBOT == GOLD)
+            {
+                wheel(-20, 0, -9);
+            }
         }
 
         // D2 = false, D3 = true
         else if (!D2 && D3)
         {
-            wheel(-20, 0, 9);
+            if (ROBOT == SILVER)
+            {
+                wheel(-20, 0, 8);
+            }
+            else if (ROBOT == GOLD)
+            {
+                wheel(-20, 0, 9);
+            }
         }
 
         // D2 = false, D3 = false
-        else if (!D2 && !D3)
+        else if ((!D2 && !D3) || (D2 && D3))
         {
-            wheel(-40, 0, 0);
+            if (ROBOT == SILVER)
+            {
+                wheel(-40, 0, 2);
+            }
+            else if (ROBOT == GOLD)
+            {
+                wheel(-40, 0, 2);
+            }
         }
     }
 }
@@ -397,8 +469,8 @@ void rightLineTracing()
  */
 void leftLineTracing()
 {
-    bool D4, D5;
-    int a2;
+    bool D4, D5, crossFlag = false;
+    int a2, start, now, v;
 
     while (true)
     {
@@ -406,42 +478,73 @@ void leftLineTracing()
         D5 = prizm.readLineSensor(5);
         a2 = analogRead(A2);
 
-        // 교차로 만나면 라인트레이싱 끝
-        if (a2 > 300)
+        // 교차로 중간으로 가기 위한 타이머
+        if (crossFlag == true)
         {
-            wheel(40, 0, 0);
-            delay(420);
-            wheel(0, 0, 0);
-            delay(100);
+            now = millis();
+            v = (ROBOT == SILVER ? 300 : 350);
+            if (now - start >= v)
+            {
+                wheel(0, 0, 0);
+                delay(100);
 
-            if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
-            {
-                currentLine++;
+                if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
+                {
+                    currentLine--;
+                }
+                else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
+                {
+                    currentLine++;
+                }
+                return;
             }
-            else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
-            {
-                currentLine--;
-            }
-            return;
+        }
+
+        // 교차로 만나면 라인트레이싱 끝
+        if (a2 > 200)
+        {
+            crossFlag = true;
+            start = millis();
         }
 
         //== 라인트레이싱 ==//
         // D4 = true, D5 = false
         else if (D4 && !D5)
         {
-            wheel(20, 0, -9);
+            if (ROBOT == SILVER)
+            {
+                wheel(20, 0, -8);
+            }
+            else if (ROBOT == GOLD)
+            {
+                wheel(20, 0, -9);
+            }
         }
 
         // D4 = false, D5 = true
         else if (!D4 && D5)
         {
-            wheel(20, 0, 9);
+            if (ROBOT == SILVER)
+            {
+                wheel(20, 0, 4);
+            }
+            else if (ROBOT == GOLD)
+            {
+                wheel(20, 0, 9);
+            }
         }
 
         // D4 = false, D5 = false
-        else if (!D4 && !D5)
+        else if ((!D4 && !D5) || (D4 && D5))
         {
-            wheel(40, 0, 0);
+            if (ROBOT == SILVER)
+            {
+                wheel(40, 0, -2);
+            }
+            else if (ROBOT == GOLD)
+            {
+                wheel(40, 0, 0);
+            }
         }
     }
 }
@@ -664,7 +767,7 @@ void flagColorLine(int targetObject)
  * @brief 현재 바라보고 있는 오브젝트의 색깔을 판별하여
  * 다음으로 이동할 기둥 배열에 저장
  */
-void columnStack() // TODO: 함수명 변경해야함
+void columnStack()
 {
     objectColumnFlag[objectFlagCount] = columnBlock[currentLine][currentLineFlag];
     Serial.println(objectColumnFlag[objectFlagCount]);
