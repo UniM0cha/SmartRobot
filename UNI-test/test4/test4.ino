@@ -1,3 +1,7 @@
+/**
+ *  허스키렌즈 학습 순서 : 빨간색(1), 초록색(2), 파란색(3), 노란색(4)
+ */
+
 #include <PRIZM.h>
 #include <stdio.h>
 #include "HUSKYLENS.h"
@@ -85,28 +89,31 @@ void setup()
 
 void loop()
 {
-    start();
-    scanAll();
-    findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
-    columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기
-    objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-    findYellowColumn(); // 노란색 기둥을 향해 이동
-    objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-    for (int i = 0; i < 3; i++)
-    {
-        Serial.println("for문");
-        flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
-        Serial.println("1-1");
-        columnStack(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
-        Serial.println("1-2");
-        objectLiftup(); // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-        Serial.println("1-3");
-        findTargetColumn(objectFlag); // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
-        Serial.println("1-4");
-        objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-        Serial.println("1-5");
-    }
-    finish(); // 구현해야함
+    // frontLineTracing();
+    backLineTracing();
+
+    // start();
+    // scanAll();
+    // findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
+    // columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기
+    // objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    // findYellowColumn(); // 노란색 기둥을 향해 이동
+    // objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+    // for (int i = 0; i < 3; i++)
+    // {
+    //     Serial.println("for문");
+    //     flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
+    //     Serial.println("1-1");
+    //     columnStack(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
+    //     Serial.println("1-2");
+    //     objectLiftup(); // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    //     Serial.println("1-3");
+    //     findTargetColumn(objectFlag); // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
+    //     Serial.println("1-4");
+    //     objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+    //     Serial.println("1-5");
+    // }
+    // finish(); // 구현해야함
 
     prizm.PrizmEnd();
 }
@@ -220,17 +227,19 @@ void finish()
 void fowardToBlock()
 {
     Serial.println("앞으로");
-    if (ROBOT == SILVER)
-    {
-        wheel(0, -30, 0);
-    }
-    else if (ROBOT == GOLD)
-    {
-        wheel(0, -30, 2);
-    }
-    delay(700);
-    wheel(0, 0, 0);
+    // if (ROBOT == SILVER)
+    // {
+    //     wheel(0, -30, 0);
+    // }
+    // else if (ROBOT == GOLD)
+    // {
+    //     wheel(0, -30, 2);
+    // }
+    // delay(700);
+    // wheel(0, 0, 0);
+
     // TODO: 구현해야함
+    frontLineTracing();
 }
 
 /**
@@ -241,18 +250,20 @@ void fowardToBlock()
 void backwardFromBlock()
 {
     Serial.println("뒤로");
-    if (ROBOT == SILVER)
-    {
+    // if (ROBOT == SILVER)
+    // {
 
-        wheel(0, 30, 0);
-    }
-    else if (ROBOT == GOLD)
-    {
-        wheel(0, 30, -1);
-    }
-    delay(700);
-    wheel(0, 0, 0);
+    //     wheel(0, 30, 0);
+    // }
+    // else if (ROBOT == GOLD)
+    // {
+    //     wheel(0, 30, -1);
+    // }
+    // delay(700);
+    // wheel(0, 0, 0);
+
     // TODO: 구현해야함
+    backLineTracing();
 }
 
 /**
@@ -535,6 +546,118 @@ void leftLineTracing()
 }
 
 /**
+ * @brief 허스키렌즈를 사용하여 직진 라인트레이싱
+ */
+void frontLineTracing()
+{
+    while (true)
+    {
+        Serial.println(F("Front Line Tracing..."));
+        if (!huskylens.request())
+            Serial.println(F("허스키렌즈와 연결 실패!"));
+        else if (!huskylens.isLearned())
+            Serial.println(F("학습되지 않음!"));
+        else if (!huskylens.available())
+        {
+            Serial.println(F("오브젝트 감지하지 못함!"));
+        }
+        else
+        {
+            Serial.println(F("오브젝트 감지함"));
+            // Serial.println(huskylens.count());  // 허스키렌즈에 감지된 오브젝트의 개수
+            while (huskylens.available())
+            {
+                HUSKYLENSResult result = huskylens.read();
+                if (result.command == COMMAND_RETURN_BLOCK)
+                {
+                    // TODO:
+                    Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID);
+                    if (result.xCenter < 140)
+                    {
+                        Serial.println(F("좌회전!"));
+                        wheel(-20, 0, -9);
+                    }
+                    else if (result.xCenter > 180)
+                    {
+                        Serial.println(F("우회전!"));
+                        wheel(-20, 0, 9);
+                    }
+                    else
+                    {
+                        Serial.println(F("직진!"));
+                        wheel(-30, 0, 1);
+                    }
+                    // width가 150 이상이면 라인트레이싱 종료
+                    if (result.width > 150)
+                    {
+                        Serial.println(F("라인트레이싱 종료!"));
+                        wheel(0, 0, 0);
+                        delay(100);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @brief 허스키렌즈를 사용하여 후진 라인트레이싱
+ */
+void backLineTracing()
+{
+    while (true)
+    {
+        Serial.println(F("Front Line Tracing..."));
+        if (!huskylens.request())
+            Serial.println(F("허스키렌즈와 연결 실패!"));
+        else if (!huskylens.isLearned())
+            Serial.println(F("학습되지 않음!"));
+        else if (!huskylens.available())
+        {
+            Serial.println(F("오브젝트 감지하지 못함!"));
+        }
+        else
+        {
+            Serial.println(F("오브젝트 감지함"));
+            // Serial.println(huskylens.count());  // 허스키렌즈에 감지된 오브젝트의 개수
+            while (huskylens.available())
+            {
+                HUSKYLENSResult result = huskylens.read();
+                if (result.command == COMMAND_RETURN_BLOCK)
+                {
+                    // TODO:
+                    Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID);
+                    if (result.xCenter < 140)
+                    {
+                        Serial.println(F("좌회전!"));
+                        wheel(20, 0, -9);
+                    }
+                    else if (result.xCenter > 180)
+                    {
+                        Serial.println(F("우회전!"));
+                        wheel(20, 0, 9);
+                    }
+                    else
+                    {
+                        Serial.println(F("후진!"));
+                        wheel(30, 0, 1);
+                    }
+                    // width가 150 이상이면 라인트레이싱 종료
+                    if (result.width < 70)
+                    {
+                        Serial.println(F("라인트레이싱 종료!"));
+                        wheel(0, 0, 0);
+                        delay(100);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * @brief 처음 배열을 채우는 함수
  */
 void scanAll()
@@ -604,10 +727,6 @@ void printResult(HUSKYLENSResult result)
     if (result.command == COMMAND_RETURN_BLOCK)
     {
         Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 오브젝트 배열상태 = ") + objectBlock[0][0] + F(", 기둥 배열상태 = ") + columnBlock[0][0]);
-    }
-    else if (result.command == COMMAND_RETURN_ARROW)
-    {
-        Serial.println(String() + F("Arrow:xOrigin=") + result.xOrigin + F(",yOrigin=") + result.yOrigin + F(",xTarget=") + result.xTarget + F(",yTarget=") + result.yTarget + F(",ID=") + result.ID);
     }
     else
     {
