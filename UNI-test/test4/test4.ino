@@ -89,8 +89,8 @@ void setup()
 
 void loop()
 {
-    // frontLineTracing();
-    backLineTracing();
+    frontLineTracing();
+    // backLineTracing();
 
     // start();
     // scanAll();
@@ -571,29 +571,35 @@ void frontLineTracing()
                 if (result.command == COMMAND_RETURN_BLOCK)
                 {
                     // TODO:
-                    Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID);
-                    if (result.xCenter < 140)
+                    // 기둥을 기준으로 라인트레이싱 한다.
+                    if (result.yCenter > 100) // ======================================== 로봇에서 적용하여 수정할 것
                     {
-                        Serial.println(F("좌회전!"));
-                        wheel(-20, 0, -9);
-                    }
-                    else if (result.xCenter > 180)
-                    {
-                        Serial.println(F("우회전!"));
-                        wheel(-20, 0, 9);
-                    }
-                    else
-                    {
-                        Serial.println(F("직진!"));
-                        wheel(-30, 0, 1);
-                    }
-                    // width가 150 이상이면 라인트레이싱 종료
-                    if (result.width > 150)
-                    {
-                        Serial.println(F("라인트레이싱 종료!"));
-                        wheel(0, 0, 0);
-                        delay(100);
-                        return;
+                        Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID);
+                        // 중간 = 160
+                        if (result.xCenter < 140) // ==================================== 로봇에서 적용하여 수정할 것
+                        {
+                            Serial.println(F("좌회전!"));
+                            wheel(-20, 0, -9);
+                        }
+                        else if (result.xCenter > 180) // =============================== 로봇에서 적용하여 수정할 것
+                        {
+                            Serial.println(F("우회전!"));
+                            wheel(-20, 0, 9);
+                        }
+                        else
+                        {
+                            Serial.println(F("직진!"));
+                            wheel(-30, 0, 1);
+                        }
+                        // width가 150 이상이면 라인트레이싱 종료
+                        if (result.width > 150) // ===================================== 로봇에서 적용하여 수정할 것
+                        {
+                            Serial.println(F("라인트레이싱 종료!"));
+                            wheel(0, 0, 0);
+                            delay(100);
+                            return;
+                        }
+                        delay(100); // ================================================== 나중에 삭제해야함
                     }
                 }
             }
