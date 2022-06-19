@@ -1,5 +1,6 @@
 /**
  *  허스키렌즈 학습 순서 : 빨간색(1), 초록색(2), 파란색(3), 노란색(4)
+ * 아날로그 센서로 turn
  */
 
 #include <PRIZM.h>
@@ -44,21 +45,33 @@ int currentLineFlag = 0;
 // 처음 기둥 위치
 // {1번줄{왼쪽, 오른쪽}, 2번줄{왼쪽, 오른쪽}, 3번줄{왼쪽, 오른쪽}, 4번줄{왼쪽, 오른쪽}, 5번줄{왼쪽, 오른쪽}}
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
+// int columnBlock[5][2] = {
+//     {0, 0},
+//     {0, 4},
+//     {1, 0},
+//     {0, 2},
+//     {0, 3}}; //한번 결정되면 그 자리 고정
 int columnBlock[5][2] = {
     {0, 0},
-    {0, 4},
-    {1, 0},
-    {0, 2},
-    {0, 3}}; //한번 결정되면 그 자리 고정
+    {0, 0},
+    {0, 0},
+    {0, 0},
+    {0, 0}}; //한번 결정되면 그 자리 고정
 
 // 오브젝트의 위치
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3
+// int objectBlock[5][2] = {
+//     {0, 0},
+//     {0, 0},
+//     {2, 0},
+//     {0, 3},
+//     {0, 1}};
 int objectBlock[5][2] = {
     {0, 0},
     {0, 0},
-    {2, 0},
-    {0, 3},
-    {0, 1}};
+    {0, 0},
+    {0, 0},
+    {0, 0}};
 
 // 적재해야하는 오브젝트의 색 배열
 // 빨간색 = 1, 초록색 = 2, 파란색 = 3
@@ -89,31 +102,46 @@ void setup()
 
 void loop()
 {
-    frontLineTracing();
+    // printHusky();
+    // frontLineTracing();
     // backLineTracing();
+    // lift_up();
+    // lift_down();
+    // lift_up();
+    // lift_down();
+    // startGrab();
+    // fowardToBlock();
+    // delay(500);
+    // backwardFromBlock();
+    // Serial.println(prizm.readSonicSensorCM(A3));
+    // delay(10);
+    // turn();
+    // rightLineTracing();
+    // delay(1000);
+    // leftLineTracing();
 
-    // start();
-    // scanAll();
-    // findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
-    // columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기
-    // objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-    // findYellowColumn(); // 노란색 기둥을 향해 이동
-    // objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-    // for (int i = 0; i < 3; i++)
-    // {
-    //     Serial.println("for문");
-    //     flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
-    //     Serial.println("1-1");
-    //     columnStack(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
-    //     Serial.println("1-2");
-    //     objectLiftup(); // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-    //     Serial.println("1-3");
-    //     findTargetColumn(objectFlag); // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
-    //     Serial.println("1-4");
-    //     objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-    //     Serial.println("1-5");
-    // }
-    // finish(); // 구현해야함
+    start();
+    scanAll();
+    findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
+    columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기
+    objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+    findYellowColumn(); // 노란색 기둥을 향해 이동
+    objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+    for (int i = 0; i < 3; i++)
+    {
+        Serial.println("for문");
+        flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
+        Serial.println("1-1");
+        columnStack(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
+        Serial.println("1-2");
+        objectLiftup(); // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+        Serial.println("1-3");
+        findTargetColumn(objectFlag); // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
+        Serial.println("1-4");
+        objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+        Serial.println("1-5");
+    }
+    finish(); // TODO:
 
     prizm.PrizmEnd();
 }
@@ -174,36 +202,103 @@ void start()
     delay(1200);
     wheel(-50, 0, 0);
     delay(500);
-    bool D2 = false;
+
+    // bool D2, crossFlag = false;
+    // int a1, a2, start, now, v;
+    bool D2;
+
+    // 줄 만날 때까지 우직진
     while (true)
     {
         D2 = prizm.readLineSensor(2);
         if (D2)
         {
             delay(300);
-            if (ROBOT == SILVER)
-            {
-                wheel(0, -40, 0);
-            }
-            else if (ROBOT == GOLD)
-            {
-                wheel(0, -50, 2);
-            }
             break;
         }
     }
 
-    D2 = false;
+    // 교차로 만날 때까지 직진
+    wheel(0, -40, 2);
     while (true)
     {
         D2 = prizm.readLineSensor(2);
-        if (D2)
+        if (D2 == true)
         {
-            // delay(100);
             wheel(0, 0, 0);
-            break;
+            return;
         }
     }
+
+    // 전진 라인트레이싱
+    // while (true)
+    // {
+    //     a1 = analogRead(A1);
+    //     a2 = analogRead(A2);
+    //     D2 = prizm.readLineSensor(2);
+
+    //     // 교차로 중간으로 가기 위한 타이머
+    //     if (crossFlag == true)
+    //     {
+    //         now = millis();
+    //         v = (ROBOT == SILVER ? 300 : 0);
+    //         if (now - start >= v)
+    //         {
+    //             wheel(0, 0, 0);
+    //             delay(100);
+    //             wheel(-40, 0, 1);
+    //             delay(1000);
+    //             return;
+    //         }
+    //     }
+
+    //     // 교차로 만나면 라인트레이싱 끝
+    //     if (D2 == true)
+    //     {
+    //         crossFlag = true;
+    //         start = millis();
+    //     }
+
+    //     //== 라인트레이싱 ==//
+    //     // D4 = true, D5 = false
+    //     else if (a1 > 200 && a2 <= 200)
+    //     {
+    //         if (ROBOT == SILVER)
+    //         {
+    //             wheel(0, -20, -8);
+    //         }
+    //         else if (ROBOT == GOLD)
+    //         {
+    //             wheel(0, -20, -9);
+    //         }
+    //     }
+
+    //     // D4 = false, D5 = true
+    //     else if (a1 <= 200 && a2 > 200)
+    //     {
+    //         if (ROBOT == SILVER)
+    //         {
+    //             wheel(0, -20, 4);
+    //         }
+    //         else if (ROBOT == GOLD)
+    //         {
+    //             wheel(0, -20, 9);
+    //         }
+    //     }
+
+    //     // D4 = false, D5 = false
+    //     else if ((a1 <= 200 && a2 <= 200) || (a1 > 200 && a2 > 200))
+    //     {
+    //         if (ROBOT == SILVER)
+    //         {
+    //             wheel(0, -40, -2);
+    //         }
+    //         else if (ROBOT == GOLD)
+    //         {
+    //             wheel(0, -40, 2);
+    //         }
+    //     }
+    // }
 }
 
 void finish()
@@ -222,24 +317,23 @@ void finish()
 /**
  * @brief 블록 가까이 다가가는 함수
  * 교차로 <-> 블록 : 14cm
- * 블록 바로 앞 : 4cm
+ * 블록 잡는 위치 : 8cm
  */
 void fowardToBlock()
 {
-    Serial.println("앞으로");
-    // if (ROBOT == SILVER)
-    // {
-    //     wheel(0, -30, 0);
-    // }
-    // else if (ROBOT == GOLD)
-    // {
-    //     wheel(0, -30, 2);
-    // }
-    // delay(700);
-    // wheel(0, 0, 0);
-
-    // TODO: 구현해야함
-    frontLineTracing();
+    int a3;
+    bool D2;
+    wheel(0, -40, 2);
+    while (true)
+    {
+        a3 = prizm.readSonicSensorCM(A3);
+        if (a3 <= 8)
+        {
+            wheel(0, 0, 0);
+            return;
+        }
+        delay(10);
+    }
 }
 
 /**
@@ -249,21 +343,19 @@ void fowardToBlock()
  */
 void backwardFromBlock()
 {
-    Serial.println("뒤로");
-    // if (ROBOT == SILVER)
-    // {
-
-    //     wheel(0, 30, 0);
-    // }
-    // else if (ROBOT == GOLD)
-    // {
-    //     wheel(0, 30, -1);
-    // }
-    // delay(700);
-    // wheel(0, 0, 0);
-
-    // TODO: 구현해야함
-    backLineTracing();
+    int a3;
+    bool D2;
+    wheel(0, 40, -1);
+    while (true)
+    {
+        a3 = prizm.readSonicSensorCM(A3);
+        if (a3 >= 12)
+        {
+            wheel(0, 0, 0);
+            return;
+        }
+        delay(10);
+    }
 }
 
 /**
@@ -273,11 +365,11 @@ void backwardFromBlock()
 void turn()
 {
     wheel(0, 0, 50);
-    delay(900);
+    delay(1000);
     wheel(0, 0, 30);
     while (true)
     {
-        if (prizm.readLineSensor(3))
+        if (analogRead(A2) > 200)
         {
             if (ROBOT == SILVER)
             {
@@ -285,7 +377,7 @@ void turn()
             }
             else if (ROBOT == GOLD)
             {
-                delay(150);
+                delay(100);
             }
 
             wheel(0, 0, 0);
@@ -381,19 +473,19 @@ void directionFind(int currentLine, int targetLine, int currentFace, int destFac
 void rightLineTracing()
 {
     bool D2, D3, crossFlag = false;
-    int a1, start, now, v;
+    int a2, start, now, v;
 
     while (true)
     {
         D2 = prizm.readLineSensor(2);
         D3 = prizm.readLineSensor(3);
-        a1 = analogRead(A1);
+        a2 = analogRead(A2);
 
         // 교차로 중간으로 가기 위한 타이머
         if (crossFlag == true)
         {
             now = millis();
-            v = (ROBOT == SILVER ? 350 : 370);
+            v = (ROBOT == SILVER ? 350 : 30);
             if (now - start >= v)
             {
                 wheel(0, 0, 0);
@@ -412,7 +504,7 @@ void rightLineTracing()
         }
 
         // 교차로 만나면 타이머 작동
-        if (a1 > 200)
+        if (a2 > 200)
         {
             crossFlag = true;
             start = millis();
@@ -466,19 +558,19 @@ void rightLineTracing()
 void leftLineTracing()
 {
     bool D4, D5, crossFlag = false;
-    int a2, start, now, v;
+    int a1, start, now, v;
 
     while (true)
     {
         D4 = prizm.readLineSensor(4);
         D5 = prizm.readLineSensor(5);
-        a2 = analogRead(A2);
+        a1 = analogRead(A1);
 
         // 교차로 중간으로 가기 위한 타이머
         if (crossFlag == true)
         {
             now = millis();
-            v = (ROBOT == SILVER ? 300 : 370);
+            v = (ROBOT == SILVER ? 300 : 30);
             if (now - start >= v)
             {
                 wheel(0, 0, 0);
@@ -497,7 +589,7 @@ void leftLineTracing()
         }
 
         // 교차로 만나면 라인트레이싱 끝
-        if (a2 > 200)
+        if (a1 > 200)
         {
             crossFlag = true;
             start = millis();
@@ -545,10 +637,7 @@ void leftLineTracing()
     }
 }
 
-/**
- * @brief 허스키렌즈를 사용하여 직진 라인트레이싱
- */
-void frontLineTracing()
+void printHusky()
 {
     while (true)
     {
@@ -570,93 +659,7 @@ void frontLineTracing()
                 HUSKYLENSResult result = huskylens.read();
                 if (result.command == COMMAND_RETURN_BLOCK)
                 {
-                    // TODO:
-                    // 기둥을 기준으로 라인트레이싱 한다.
-                    if (result.yCenter > 100) // ======================================== 로봇에서 적용하여 수정할 것
-                    {
-                        Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID);
-                        // 중간 = 160
-                        if (result.xCenter < 140) // ==================================== 로봇에서 적용하여 수정할 것
-                        {
-                            Serial.println(F("좌회전!"));
-                            wheel(-20, 0, -9);
-                        }
-                        else if (result.xCenter > 180) // =============================== 로봇에서 적용하여 수정할 것
-                        {
-                            Serial.println(F("우회전!"));
-                            wheel(-20, 0, 9);
-                        }
-                        else
-                        {
-                            Serial.println(F("직진!"));
-                            wheel(-30, 0, 1);
-                        }
-                        // width가 150 이상이면 라인트레이싱 종료
-                        if (result.width > 150) // ===================================== 로봇에서 적용하여 수정할 것
-                        {
-                            Serial.println(F("라인트레이싱 종료!"));
-                            wheel(0, 0, 0);
-                            delay(100);
-                            return;
-                        }
-                        delay(100); // ================================================== 나중에 삭제해야함
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * @brief 허스키렌즈를 사용하여 후진 라인트레이싱
- */
-void backLineTracing()
-{
-    while (true)
-    {
-        Serial.println(F("Front Line Tracing..."));
-        if (!huskylens.request())
-            Serial.println(F("허스키렌즈와 연결 실패!"));
-        else if (!huskylens.isLearned())
-            Serial.println(F("학습되지 않음!"));
-        else if (!huskylens.available())
-        {
-            Serial.println(F("오브젝트 감지하지 못함!"));
-        }
-        else
-        {
-            Serial.println(F("오브젝트 감지함"));
-            // Serial.println(huskylens.count());  // 허스키렌즈에 감지된 오브젝트의 개수
-            while (huskylens.available())
-            {
-                HUSKYLENSResult result = huskylens.read();
-                if (result.command == COMMAND_RETURN_BLOCK)
-                {
-                    // TODO:
                     Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID);
-                    if (result.xCenter < 140)
-                    {
-                        Serial.println(F("좌회전!"));
-                        wheel(20, 0, -9);
-                    }
-                    else if (result.xCenter > 180)
-                    {
-                        Serial.println(F("우회전!"));
-                        wheel(20, 0, 9);
-                    }
-                    else
-                    {
-                        Serial.println(F("후진!"));
-                        wheel(30, 0, 1);
-                    }
-                    // width가 150 이상이면 라인트레이싱 종료
-                    if (result.width < 70)
-                    {
-                        Serial.println(F("라인트레이싱 종료!"));
-                        wheel(0, 0, 0);
-                        delay(100);
-                        return;
-                    }
                 }
             }
         }
@@ -672,18 +675,18 @@ void scanAll()
     {
         // 0번 줄에서 4번 줄까지
         directionFind(currentLine, i, currentLineFlag, 0);
-        // colorCheck();
+        colorCheck();
     }
 
     // 4번줄에서 턴
     directionFind(4, 4, 0, 1);
-    // colorCheck();
+    colorCheck();
 
     for (int i = 3; i >= 1; i--)
     {
         // 4번 줄에서 1번 줄까지
         directionFind(currentLine, i, currentLineFlag, 1);
-        // colorCheck();
+        colorCheck();
     }
 }
 
@@ -713,14 +716,16 @@ void colorCheck()
                 if (result.yCenter >= 160)
                 {
                     columnBlock[currentLine][currentLineFlag] = result.ID;
+                    Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 기둥 배열상태 = ") + columnBlock[currentLine][currentLineFlag]);
                 }
-                if (result.yCenter <= 80)
+                if (result.yCenter < 160)
                 {
                     objectBlock[currentLine][currentLineFlag] = result.ID;
+                    Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 오브젝트 배열상태 = ") + objectBlock[currentLine][currentLineFlag]);
                 }
             }
-            printResult(result);
-            delay(1000);
+            delay(100);
+            // printResult(result);
         }
     }
 }
@@ -743,16 +748,22 @@ void printResult(HUSKYLENSResult result)
 /**
  * @brief objectBlock 배열에 들어있는 값 출력
  */
-void printObject()
+void printObjectColumn()
 {
-
+    Serial.println("오브젝트배열 : ");
     for (int j = 0; j <= 4; j++)
     {
         for (int k = 0; k <= 1; k++)
         {
-            Serial.println("오브젝트배열 : ");
             Serial.println(objectBlock[j][k]);
-            delay(1000);
+        }
+    }
+    Serial.println("기둥배열 : ");
+    for (int j = 0; j <= 4; j++)
+    {
+        for (int k = 0; k <= 1; k++)
+        {
+            Serial.println(columnBlock[j][k]);
         }
     }
 }
