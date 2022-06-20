@@ -110,6 +110,11 @@ void loop()
     // lift_up();
     // lift_down();
     // startGrab();
+    // delay(500);
+    // objectGrab();
+    // delay(500);
+    // objectDrop();
+
     // fowardToBlock();
     // delay(500);
     // backwardFromBlock();
@@ -229,76 +234,6 @@ void start()
             return;
         }
     }
-
-    // 전진 라인트레이싱
-    // while (true)
-    // {
-    //     a1 = analogRead(A1);
-    //     a2 = analogRead(A2);
-    //     D2 = prizm.readLineSensor(2);
-
-    //     // 교차로 중간으로 가기 위한 타이머
-    //     if (crossFlag == true)
-    //     {
-    //         now = millis();
-    //         v = (ROBOT == SILVER ? 300 : 0);
-    //         if (now - start >= v)
-    //         {
-    //             wheel(0, 0, 0);
-    //             delay(100);
-    //             wheel(-40, 0, 1);
-    //             delay(1000);
-    //             return;
-    //         }
-    //     }
-
-    //     // 교차로 만나면 라인트레이싱 끝
-    //     if (D2 == true)
-    //     {
-    //         crossFlag = true;
-    //         start = millis();
-    //     }
-
-    //     //== 라인트레이싱 ==//
-    //     // D4 = true, D5 = false
-    //     else if (a1 > 200 && a2 <= 200)
-    //     {
-    //         if (ROBOT == SILVER)
-    //         {
-    //             wheel(0, -20, -8);
-    //         }
-    //         else if (ROBOT == GOLD)
-    //         {
-    //             wheel(0, -20, -9);
-    //         }
-    //     }
-
-    //     // D4 = false, D5 = true
-    //     else if (a1 <= 200 && a2 > 200)
-    //     {
-    //         if (ROBOT == SILVER)
-    //         {
-    //             wheel(0, -20, 4);
-    //         }
-    //         else if (ROBOT == GOLD)
-    //         {
-    //             wheel(0, -20, 9);
-    //         }
-    //     }
-
-    //     // D4 = false, D5 = false
-    //     else if ((a1 <= 200 && a2 <= 200) || (a1 > 200 && a2 > 200))
-    //     {
-    //         if (ROBOT == SILVER)
-    //         {
-    //             wheel(0, -40, -2);
-    //         }
-    //         else if (ROBOT == GOLD)
-    //         {
-    //             wheel(0, -40, 2);
-    //         }
-    //     }
-    // }
 }
 
 void finish()
@@ -323,7 +258,7 @@ void fowardToBlock()
 {
     int a3;
     bool D2;
-    wheel(0, -40, 2);
+    wheel(0, -40, 3);
     while (true)
     {
         a3 = prizm.readSonicSensorCM(A3);
@@ -377,7 +312,7 @@ void turn()
             }
             else if (ROBOT == GOLD)
             {
-                delay(100);
+                delay(200);
             }
 
             wheel(0, 0, 0);
@@ -485,7 +420,7 @@ void rightLineTracing()
         if (crossFlag == true)
         {
             now = millis();
-            v = (ROBOT == SILVER ? 350 : 30);
+            v = (ROBOT == SILVER ? 350 : 20);
             if (now - start >= v)
             {
                 wheel(0, 0, 0);
@@ -641,7 +576,6 @@ void printHusky()
 {
     while (true)
     {
-        Serial.println(F("Front Line Tracing..."));
         if (!huskylens.request())
             Serial.println(F("허스키렌즈와 연결 실패!"));
         else if (!huskylens.isLearned())
@@ -688,6 +622,7 @@ void scanAll()
         directionFind(currentLine, i, currentLineFlag, 1);
         colorCheck();
     }
+    printObjectColumn();
 }
 
 /**
@@ -708,24 +643,40 @@ void colorCheck()
     else
     {
         Serial.println(F("###########"));
-        while (huskylens.available())
+        // 하나만 감지 = 노란색 기둥
+        if (huskylens.count() == 1)
         {
-            HUSKYLENSResult result = huskylens.read();
-            if (result.command == COMMAND_RETURN_BLOCK)
+            columnBlock[currentLine][currentLineFlag] = 4;
+        }
+        else
+        {
+            while (huskylens.available())
             {
-                if (result.yCenter >= 160)
+                HUSKYLENSResult result1 = huskylens.read();
+                HUSKYLENSResult result2 = huskylens.read();
+                if (result1.yCenter >= result2.yCenter)
                 {
-                    columnBlock[currentLine][currentLineFlag] = result.ID;
-                    Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 기둥 배열상태 = ") + columnBlock[currentLine][currentLineFlag]);
+                    columnBlock[currentLine][currentLineFlag] = result1.ID;
+                    objectBlock[currentLine][currentLineFlag] = result2.ID;
                 }
-                if (result.yCenter < 160)
+                else
                 {
-                    objectBlock[currentLine][currentLineFlag] = result.ID;
-                    Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 오브젝트 배열상태 = ") + objectBlock[currentLine][currentLineFlag]);
+                    columnBlock[currentLine][currentLineFlag] = result2.ID;
+                    objectBlock[currentLine][currentLineFlag] = result1.ID;
                 }
+                // if (result.yCenter >= 160)
+                // {
+                //     columnBlock[currentLine][currentLineFlag] = result.ID;
+                //     Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 기둥 배열상태 = ") + columnBlock[currentLine][currentLineFlag]);
+                // }
+                // if (result.yCenter < 160)
+                // {
+                //     objectBlock[currentLine][currentLineFlag] = result.ID;
+                //     Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 오브젝트 배열상태 = ") + objectBlock[currentLine][currentLineFlag]);
+                // }
+                delay(100);
+                // printResult(result);
             }
-            delay(100);
-            // printResult(result);
         }
     }
 }
@@ -899,7 +850,7 @@ void objectLiftup()
 {
     fowardToBlock();
     objectGrab();
-    lift_up(); // lift 아주 살짝 올려주기
+    lift_up();
     backwardFromBlock();
     // 오브젝트 리프트업을 위한 전진과 리프트업 하고 뒤에까지 오기
 }
@@ -907,7 +858,7 @@ void objectLiftup()
 void objectLiftdown()
 {
     fowardToBlock();
-    lift_down(); // lift 올린만큼 내려주기
+    lift_down();
     objectDrop();
     backwardFromBlock();
     // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
@@ -918,8 +869,8 @@ void objectLiftdown()
  */
 void startGrab()
 {
-    prizm.setMotorSpeed(2, -600);
-    delay(700);
+    prizm.setMotorSpeed(2, 600);
+    delay(600);
     prizm.setMotorSpeed(2, 0);
     delay(100);
 }
@@ -930,8 +881,8 @@ void startGrab()
 void objectGrab()
 {
     // TODO: 모터 회전
-    prizm.setMotorSpeed(2, 600);
-    delay(600);
+    prizm.setMotorSpeed(2, -600);
+    delay(500);
     prizm.setMotorSpeed(2, 0);
     delay(100);
 }
@@ -942,8 +893,8 @@ void objectGrab()
 void objectDrop()
 {
     // TODO: 모터 회전
-    prizm.setMotorSpeed(2, -600);
-    delay(600);
+    prizm.setMotorSpeed(2, 600);
+    delay(500);
     prizm.setMotorSpeed(2, 0);
     delay(100);
 }
