@@ -126,7 +126,7 @@ void loop()
         objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
         Serial.println("1-5");
     }
-    finish(); // TODO:
+    finish();
 
     prizm.PrizmEnd();
 }
@@ -308,7 +308,7 @@ void turn()
             }
             else if (ROBOT == GOLD)
             {
-                delay(100);
+                delay(300);
             }
 
             wheel(0, 0, 0);
@@ -414,7 +414,7 @@ void rightLineTracing()
         a2 = analogRead(A2);
         now = millis();
 
-        if (a2 > 200 && now - start > 300)
+        if (a2 > 200 && now - start > 500)
         {
             wheel(0, 0, 0);
 
@@ -489,7 +489,7 @@ void leftLineTracing()
         a1 = analogRead(A1);
         now = millis();
 
-        if (a1 > 200 && now - start > 300)
+        if (a1 > 200 && now - start > 500)
         {
             wheel(0, 0, 0);
 
@@ -856,7 +856,6 @@ void startGrab()
  */
 void objectGrab()
 {
-    // TODO: 모터 회전
     prizm.setMotorSpeed(2, -600);
     delay(500);
     prizm.setMotorSpeed(2, 0);
@@ -868,7 +867,6 @@ void objectGrab()
  */
 void objectDrop()
 {
-    // TODO: 모터 회전
     prizm.setMotorSpeed(2, 600);
     delay(500);
     prizm.setMotorSpeed(2, 0);
@@ -878,7 +876,7 @@ void objectDrop()
 void lift_up()
 { //리프트 up 함수
     prizm.setMotorSpeed(1, -600);
-    delay(600);
+    delay(800);
     prizm.setMotorSpeed(1, 0);
     delay(100);
 }
@@ -886,7 +884,7 @@ void lift_up()
 void lift_down()
 { //리프트 down 함수
     prizm.setMotorSpeed(1, 600);
-    delay(600);
+    delay(800);
     prizm.setMotorSpeed(1, 0);
     delay(100);
 }
