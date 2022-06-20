@@ -1,4 +1,4 @@
-/**
+/**W
  * @file UNI-test2.ino
  * @author 박정우, 이정윤, 김승민, 전상현, 나기성, 양다운
  * @brief 두번째 Tetrix Smart Robot을 위한 코드 작성

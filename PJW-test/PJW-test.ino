@@ -102,8 +102,29 @@ void start()
     }
   }
 
+<<<<<<< Updated upstream
   bool D2 = false;
   while (true)
+=======
+  //  start();              // 구현해야함 //정윤이가 구현해놓음
+  //  ();             // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
+  Serial.println("1번째");
+  checkBlock();
+  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 끝 쪽 기둥 탐색 후 이동 //
+  Serial.println("2번째");
+  checkBlock();
+  vkseks(); // 바로 앞에 있는 기둥의 색을 저장해놓기 //
+  Serial.println("3번째");
+  checkBlock();
+  //  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 세부 조절
+  Serial.println("4번째");
+  checkBlock();
+  findYellowColumn(); // 노란색 기둥을 향해 이동 //
+  Serial.println("5번째");
+  checkBlock();
+  //  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  for (int i = 0; i < 3; i++)
+>>>>>>> Stashed changes
   {
     D2 = prizm.readLineSensor(2);
     if (D2)
