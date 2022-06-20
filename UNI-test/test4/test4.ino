@@ -102,28 +102,8 @@ void setup()
 
 void loop()
 {
-    // printHusky();
-    // frontLineTracing();
-    // backLineTracing();
-    // lift_up();
-    // lift_down();
-    // lift_up();
-    // lift_down();
-    // startGrab();
-    // delay(500);
-    // objectGrab();
-    // delay(500);
-    // objectDrop();
-
-    // fowardToBlock();
-    // delay(500);
-    // backwardFromBlock();
-    // Serial.println(prizm.readSonicSensorCM(A3));
-    // delay(10);
-    // turn();
     // rightLineTracing();
-    // delay(1000);
-    // leftLineTracing();
+    // turn();
 
     start();
     scanAll();
@@ -256,16 +236,32 @@ void finish()
  */
 void fowardToBlock()
 {
-    int a3;
-    bool D2;
-    wheel(0, -40, 3);
+    int a1, a2, a3;
     while (true)
     {
+        a1 = analogRead(A1);
+        a2 = analogRead(A2);
         a3 = prizm.readSonicSensorCM(A3);
-        if (a3 <= 8)
+        if (a3 <= 7)
         {
             wheel(0, 0, 0);
             return;
+        }
+
+        else if (a1 >= 200 && a2 < 200)
+        {
+            // 좌직진
+            wheel(0, -15, -7);
+        }
+        else if (a1 < 200 && a2 >= 200)
+        {
+            // 우직진
+            wheel(0, -15, 7);
+        }
+        else
+        {
+            // 전진
+            wheel(0, -30, 2);
         }
         delay(10);
     }
@@ -273,8 +269,8 @@ void fowardToBlock()
 
 /**
  * @brief 블록으로부터 멀어지는 함수
- * 교차로 <-> 블록 : 14cm
- * 블록 바로 앞 : 4cm
+ * 교차로 <-> 블록 : 12cm
+ * 블록 바로 앞 : 8cm
  */
 void backwardFromBlock()
 {
@@ -301,7 +297,7 @@ void turn()
 {
     wheel(0, 0, 50);
     delay(1000);
-    wheel(0, 0, 30);
+    wheel(0, 0, 20);
     while (true)
     {
         if (analogRead(A2) > 200)
@@ -312,7 +308,7 @@ void turn()
             }
             else if (ROBOT == GOLD)
             {
-                delay(200);
+                delay(100);
             }
 
             wheel(0, 0, 0);
@@ -409,40 +405,30 @@ void rightLineTracing()
 {
     bool D2, D3, crossFlag = false;
     int a2, start, now, v;
+    start = millis();
 
     while (true)
     {
         D2 = prizm.readLineSensor(2);
         D3 = prizm.readLineSensor(3);
         a2 = analogRead(A2);
+        now = millis();
 
-        // 교차로 중간으로 가기 위한 타이머
-        if (crossFlag == true)
+        if (a2 > 200 && now - start > 300)
         {
-            now = millis();
-            v = (ROBOT == SILVER ? 350 : 20);
-            if (now - start >= v)
+            wheel(0, 0, 0);
+
+            if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
             {
-                wheel(0, 0, 0);
-                delay(100);
-
-                if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
-                {
-                    currentLine++;
-                }
-                else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
-                {
-                    currentLine--;
-                }
-                return;
+                currentLine++;
             }
-        }
+            else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
+            {
+                currentLine--;
+            }
 
-        // 교차로 만나면 타이머 작동
-        if (a2 > 200)
-        {
-            crossFlag = true;
-            start = millis();
+            delay(100);
+            return;
         }
 
         //== 라인트레이싱 ==//
@@ -494,40 +480,30 @@ void leftLineTracing()
 {
     bool D4, D5, crossFlag = false;
     int a1, start, now, v;
+    start = millis();
 
     while (true)
     {
         D4 = prizm.readLineSensor(4);
         D5 = prizm.readLineSensor(5);
         a1 = analogRead(A1);
+        now = millis();
 
-        // 교차로 중간으로 가기 위한 타이머
-        if (crossFlag == true)
+        if (a1 > 200 && now - start > 300)
         {
-            now = millis();
-            v = (ROBOT == SILVER ? 300 : 30);
-            if (now - start >= v)
+            wheel(0, 0, 0);
+
+            if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
             {
-                wheel(0, 0, 0);
-                delay(100);
-
-                if (currentLineFlag == 0) // 왼쪽을 보고있을 경우엔 currentLine 증가
-                {
-                    currentLine--;
-                }
-                else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
-                {
-                    currentLine++;
-                }
-                return;
+                currentLine--;
             }
-        }
+            else if (currentLineFlag == 1) // 오른쪽을 보고있을 경우엔 currentLine 감소
+            {
+                currentLine++;
+            }
 
-        // 교차로 만나면 라인트레이싱 끝
-        if (a1 > 200)
-        {
-            crossFlag = true;
-            start = millis();
+            delay(100);
+            return;
         }
 
         //== 라인트레이싱 ==//
@@ -902,7 +878,7 @@ void objectDrop()
 void lift_up()
 { //리프트 up 함수
     prizm.setMotorSpeed(1, -600);
-    delay(400);
+    delay(600);
     prizm.setMotorSpeed(1, 0);
     delay(100);
 }
@@ -910,7 +886,7 @@ void lift_up()
 void lift_down()
 { //리프트 down 함수
     prizm.setMotorSpeed(1, 600);
-    delay(400);
+    delay(600);
     prizm.setMotorSpeed(1, 0);
     delay(100);
 }
