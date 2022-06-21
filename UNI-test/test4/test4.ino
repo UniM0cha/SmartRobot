@@ -102,9 +102,6 @@ void setup()
 
 void loop()
 {
-    // rightLineTracing();
-    // turn();
-
     start();
     scanAll();
     findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
@@ -151,30 +148,15 @@ void loop()
  */
 void wheel(int x, int y, int z)
 {
-    if (ROBOT == GOLD)
-    {
-        int A = 0, B = 0, C = 0, D = 0;
+    int A = 0, B = 0, C = 0, D = 0;
 
-        A = (x * 0.5) + (y * 0.5) + (z * 0.841471);
-        B = (x * 0.5 * -1) + (y * 0.5) + (z * 0.841471);
-        C = (x * 0.5 * -1) + (y * 0.5 * -1) + (z * 0.841471);
-        D = (x * 0.5) + (y * 0.5 * -1) + (z * 0.841471);
+    A = (x * 0.5) + (y * 0.5) + (z * 0.841471);
+    B = (x * 0.5 * -1) + (y * 0.5) + (z * 0.841471);
+    C = (x * 0.5 * -1) + (y * 0.5 * -1) + (z * 0.841471);
+    D = (x * 0.5) + (y * 0.5 * -1) + (z * 0.841471);
 
-        exc1.setMotorPowers(1, A, B);
-        exc2.setMotorPowers(2, C, D);
-    }
-    else if (ROBOT == SILVER)
-    {
-        int A = 0, B = 0, C = 0, D = 0;
-
-        A = (x * 0.5) + (y * 0.5) + (z * 0.841471);
-        B = (x * 0.5 * -1) + (y * 0.5) + (z * 0.841471);
-        C = (x * 0.5 * -1) + (y * 0.5 * -1) + (z * 0.841471);
-        D = (x * 0.5) + (y * 0.5 * -1) + (z * 0.841471);
-
-        exc1.setMotorPowers(1, A, B);
-        exc2.setMotorPowers(3, C, D);
-    }
+    exc1.setMotorPowers(1, A, B);
+    exc2.setMotorPowers(2, C, D);
 }
 
 /**
@@ -188,8 +170,6 @@ void start()
     wheel(-50, 0, 0);
     delay(500);
 
-    // bool D2, crossFlag = false;
-    // int a1, a2, start, now, v;
     bool D2;
 
     // 줄 만날 때까지 우직진
@@ -216,6 +196,9 @@ void start()
     }
 }
 
+/**
+ * @brief 경기장 -> 끝지점 이동하는 코드
+ */
 void finish()
 {
     directionFind(currentLine, 0, currentLineFlag, 0);
@@ -231,8 +214,7 @@ void finish()
 
 /**
  * @brief 블록 가까이 다가가는 함수
- * 교차로 <-> 블록 : 14cm
- * 블록 잡는 위치 : 8cm
+ * 블록 잡는 위치 : 7cm
  */
 void fowardToBlock()
 {
@@ -270,7 +252,6 @@ void fowardToBlock()
 /**
  * @brief 블록으로부터 멀어지는 함수
  * 교차로 <-> 블록 : 12cm
- * 블록 바로 앞 : 8cm
  */
 void backwardFromBlock()
 {
@@ -290,7 +271,7 @@ void backwardFromBlock()
 }
 
 /**
- * @brief 180도 회전하는 코드
+ * @brief 180도 회전하는 코드.
  * 회전하면서 currentLineFlag도 전환
  */
 void turn()
@@ -302,15 +283,7 @@ void turn()
     {
         if (analogRead(A2) > 200)
         {
-            if (ROBOT == SILVER)
-            {
-                delay(20);
-            }
-            else if (ROBOT == GOLD)
-            {
-                delay(300);
-            }
-
+            delay(300);
             wheel(0, 0, 0);
             delay(100);
             currentLineFlag = !currentLineFlag;
@@ -326,11 +299,11 @@ void turn()
  * @param currentLine 현재 서있는 라인
  * @param targetLine 목적지 라인
  * @param currentFace 현재 보고있는 방향
- * @param destFace 봐야하는 방향
+ * @param targetFace 봐야하는 방향
  */
-void directionFind(int currentLine, int targetLine, int currentFace, int destFace)
+void directionFind(int currentLine, int targetLine, int currentFace, int targetFace)
 {
-    Serial.println(String() + F("directionFind()\ncurrentLine : ") + currentLine + F("\ntargetLine : ") + targetLine + F("\ncurrentFace : ") + currentFace + F("\ndestFace : ") + destFace);
+    Serial.println(String() + F("directionFind()\ncurrentLine : ") + currentLine + F("\ntargetLine : ") + targetLine + F("\ncurrentFace : ") + currentFace + F("\ndestFace : ") + targetFace);
     // 0번쪽을 보고 있으면 우측이동 = 줄 증가
     // 1번쪽을 보고 있으면 우측이동 = 줄 감소
 
@@ -350,7 +323,7 @@ void directionFind(int currentLine, int targetLine, int currentFace, int destFac
     int moveAbs = abs(move);
 
     // 지금 보는 방향과 봐야하는 방향이 다를 경우
-    if (currentFace ^ destFace)
+    if (currentFace ^ targetFace)
     {
         // 우측 이동
         if (move < 0)
@@ -581,22 +554,35 @@ void printHusky()
  */
 void scanAll()
 {
+    int count = 0;
     for (int i = 1; i <= 4; i++)
     {
         // 0번 줄에서 4번 줄까지
         directionFind(currentLine, i, currentLineFlag, 0);
-        colorCheck();
+        count += colorCheck();
     }
+
+    // 조기종료
+    if (count >= 4)
+        return;
 
     // 4번줄에서 턴
     directionFind(4, 4, 0, 1);
-    colorCheck();
+    count += colorCheck();
+
+    // 조기종료
+    if (count >= 4)
+        return;
 
     for (int i = 3; i >= 1; i--)
     {
         // 4번 줄에서 1번 줄까지
         directionFind(currentLine, i, currentLineFlag, 1);
-        colorCheck();
+        count += colorCheck();
+
+        // 조기종료
+        if (count >= 4)
+            return;
     }
     printObjectColumn();
 }
@@ -604,7 +590,7 @@ void scanAll()
 /**
  * @brief 허스키렌즈를 사용하여 색깔 판별 후 columnBlock과 objectBlock에 값 채워넣는 함수
  */
-void colorCheck()
+int colorCheck()
 {
     Serial.println("Color Checking...");
     if (!huskylens.request())
@@ -615,10 +601,11 @@ void colorCheck()
     {
         columnBlock[currentLine][currentLineFlag] = 0;
         objectBlock[currentLine][currentLineFlag] = 0;
+        return 0;
     }
     else
     {
-        Serial.println(F("###########"));
+        Serial.println(F("오브젝트 감지함"));
         // 하나만 감지 = 노란색 기둥
         if (huskylens.count() == 1)
         {
@@ -640,20 +627,10 @@ void colorCheck()
                     columnBlock[currentLine][currentLineFlag] = result2.ID;
                     objectBlock[currentLine][currentLineFlag] = result1.ID;
                 }
-                // if (result.yCenter >= 160)
-                // {
-                //     columnBlock[currentLine][currentLineFlag] = result.ID;
-                //     Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 기둥 배열상태 = ") + columnBlock[currentLine][currentLineFlag]);
-                // }
-                // if (result.yCenter < 160)
-                // {
-                //     objectBlock[currentLine][currentLineFlag] = result.ID;
-                //     Serial.println(String() + F("Block:xCenter=") + result.xCenter + F(",yCenter=") + result.yCenter + F(",width=") + result.width + F(",height=") + result.height + F(",ID=") + result.ID + F(", 오브젝트 배열상태 = ") + objectBlock[currentLine][currentLineFlag]);
-                // }
                 delay(100);
-                // printResult(result);
             }
         }
+        return 1;
     }
 }
 
@@ -822,22 +799,26 @@ void columnStack()
     objectFlagCount++;
 }
 
+/**
+ * @brief 전진, 잡기, 올리기, 후진
+ */
 void objectLiftup()
 {
     fowardToBlock();
     objectGrab();
     lift_up();
     backwardFromBlock();
-    // 오브젝트 리프트업을 위한 전진과 리프트업 하고 뒤에까지 오기
 }
 
+/**
+ * @brief 전진, 내리기, 놓기, 후진
+ */
 void objectLiftdown()
 {
     fowardToBlock();
     lift_down();
     objectDrop();
     backwardFromBlock();
-    // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
 }
 
 /**
@@ -873,16 +854,18 @@ void objectDrop()
     delay(100);
 }
 
+//리프트 들기 함수
 void lift_up()
-{ //리프트 up 함수
+{
     prizm.setMotorSpeed(1, -600);
     delay(800);
     prizm.setMotorSpeed(1, 0);
     delay(100);
 }
 
+//리프트 내리기 함수
 void lift_down()
-{ //리프트 down 함수
+{
     prizm.setMotorSpeed(1, 600);
     delay(800);
     prizm.setMotorSpeed(1, 0);
