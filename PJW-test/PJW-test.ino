@@ -13,7 +13,6 @@ EXPANSION exc2;
 #define RED 1
 #define GREEN 2
 #define BLUE 3
-#define YELLOW 4
 
 enum CrossType
 {
@@ -102,34 +101,12 @@ void start()
     }
   }
 
-<<<<<<< Updated upstream
   bool D2 = false;
   while (true)
-=======
-  //  start();              // 구현해야함 //정윤이가 구현해놓음
-  //  ();             // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
-  Serial.println("1번째");
-  checkBlock();
-  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 끝 쪽 기둥 탐색 후 이동 //
-  Serial.println("2번째");
-  checkBlock();
-  vkseks(); // 바로 앞에 있는 기둥의 색을 저장해놓기 //
-  Serial.println("3번째");
-  checkBlock();
-  //  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 세부 조절
-  Serial.println("4번째");
-  checkBlock();
-  findYellowColumn(); // 노란색 기둥을 향해 이동 //
-  Serial.println("5번째");
-  checkBlock();
-  //  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-  for (int i = 0; i < 3; i++)
->>>>>>> Stashed changes
   {
     D2 = prizm.readLineSensor(2);
     if (D2)
     {
-      delay(100);
       wheel(0, 0, 0);
       break;
     }
@@ -269,19 +246,39 @@ void lift_down(int s)
 void turn()
 {
   if (direc == -1)
+  {
     // 처음엔 빠른 속도로 돌다가
     wheel(0, 0, -40);
-  delay(1350);
-  // 느린속도로 센서 감지
-  wheel(0, 0, -25);
-  while (1)
-  {
-    // 디지털 센서 사용
-    D2 = prizm.readLineSensor(2);
-    if (D2 == 1)
+    delay(1300);
+    // 느린속도로 센서 감지
+    wheel(0, 0, -25);
+    while (1)
     {
-      wheel(0, 0, 0);
-      break;
+      // 디지털 센서 사용
+      D4 = prizm.readLineSensor(4);
+      if (D4 == 1)
+      {
+        wheel(0, 0, 0);
+        break;
+      }
+    }
+  }
+  else if (direc == 1)
+  {
+    // 처음엔 빠른 속도로 돌다가
+    wheel(0, 0, 40);
+    delay(1250);
+    // 느린속도로 센서 감지
+    wheel(0, 0, 25);
+    while (1)
+    {
+      // 디지털 센서 사용
+      D3 = prizm.readLineSensor(3);
+      if (D3 == 1)
+      {
+        wheel(0, 0, 0);
+        break;
+      }
     }
   }
   // center();
@@ -296,7 +293,6 @@ void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
 
   if (targetFlag - currentFlag != 0)
   {
-    turn(); // 시간 넣어주기
     currentLineFlag = targetFlag;
   }
 
@@ -329,6 +325,11 @@ void Direction_find(int now_line, int next, int currentFlag, int targetFlag)
     {
       direc = STOP;
     }
+  }
+
+  if (targetFlag - currentFlag != 0)
+  {
+    turn();
   }
 
   Serial.println(direc);
@@ -442,8 +443,10 @@ void lineTracing(int direc)
 
 /**
  * @brief 만난 교차로가 어떤 모양의 교차로인지 반환하고 교차로의 중간으로 이동
+ *
+ * @return CrossType
  */
-void checkCross()
+CrossType checkCross()
 {
   bool D2 = false, D5 = false, left = false, right = false;
 
@@ -465,9 +468,17 @@ void checkCross()
   wheel(0, 0, 0);
   delay(100);
 
-  if (left || right)
+  if (left && right)
   {
-    return;
+    return CROSS;
+  }
+  else if (left && !right)
+  {
+    return LEFT;
+  }
+  else if (!left && right)
+  {
+    return RIGHT;
   }
   else
   {
@@ -648,17 +659,14 @@ void turnLeft()
 //  }
 //}
 
-/**
- * @brief 노란색기둥말고 가장 앞쪽에서 가까운 오브젝트 라인 찾는 함수
- */
-void findFirstTarget()
+// 노란색기둥말고 가장 앞쪽에서 가까운 오브젝트 라인 찾는 함수
+void shfkstorakfrhwjrwo()
 {
   int forflag = 0;
   for (int i = 0; i <= 4; i++)
   {
     for (int j = 0; j <= 1; j++)
     {
-      // 기둥이 빨간색, 초록색, 파란색인 경우
       if (columnBlock[i][j] == 1 || columnBlock[i][j] == 2 || columnBlock[i][j] == 3)
       {
         targetLine = i;
@@ -697,16 +705,13 @@ void objectLiftdown()
 }
 
 // 바로앞에 있는 오브젝트기둥의 색깔 판별
-void columnStack()
+void vkseks()
 {
   objectColumnFlag[objectFlagCount] = columnBlock[currentLine][currentLineFlag];
   Serial.println(objectColumnFlag[objectFlagCount]);
   objectFlagCount++;
 }
 
-/**
- * @brief 노란색 기둥을 찾아서 이동하는 함수
- */
 void findYellowColumn()
 {
   int forflag = 0;
@@ -731,11 +736,6 @@ void findYellowColumn()
   Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
-/**
- * @brief 매개변수로 주어진 기둥을 찾아서 이동하는 함수
- *
- * @param targetObject 찾을 오브젝트 값
- */
 void findTargetColumn(int targetObject)
 {
   int forflag = 0;
@@ -760,11 +760,7 @@ void findTargetColumn(int targetObject)
   Direction_find(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
-/**
- * @brief 매개변수로 주어진 오브젝트를 찾아서 이동하는 함수
- *
- * @param colorNum
- */
+//
 void flagColorLine(int colorNum)
 {
   Serial.println(colorNum);
@@ -803,14 +799,12 @@ void objectDrop()
 
 void finish()
 {
+  // 몇 번 라인에 있어도 finish를 가기 위해 0번줄에 왼쪽보게 이동
   Direction_find(currentLine, 0, currentLineFlag, 0);
-  // 끝라인에서 피니쉬 들어가기
+  wheel(0, -60, 0);
 }
 
-/**
- * @brief 허스키렌즈를 사용하여 색깔 판별 후 columnBlock과 objectBlock에 값 채워넣는 함수
- */
-void colorCheck()
+void colorvksquf()
 {
   if (!huskylens.request())
     Serial.println(F("Fail to request data from HUSKYLENS, recheck the connection!"));
@@ -844,9 +838,6 @@ void colorCheck()
   }
 }
 
-/**
- * @brief 허스키 렌즈로 얻은 result를 시리얼 출력하는 함수
- */
 void printResult(HUSKYLENSResult result)
 {
   if (result.command == COMMAND_RETURN_BLOCK)
@@ -863,10 +854,7 @@ void printResult(HUSKYLENSResult result)
   }
 }
 
-/**
- * @brief objectBlock 배열에 들어있는 값 출력
- */
-void printObject()
+void checkBlock()
 {
 
   for (int j = 0; j <= 4; j++)
@@ -880,69 +868,67 @@ void printObject()
   }
 }
 
-/**
- * @brief 처음 배열을 채우는 함수
- */
 void qodufcodnrl()
 {
   for (int i = 0; i < 4; i++)
   {
     Direction_move(1, 1);
-    colorCheck();
+    colorvksquf();
   }
   turn();
   for (int j = 4; j > 0; j--)
   {
     Direction_move(RIGHT, 1);
-    colorCheck();
+    colorvksquf();
   }
 }
 
 void loop()
 {
 
-  //  start();              // 구현해야함 //정윤이가 구현해놓음
+  //  start();              //정윤이가 구현해놓음
   //  qodufcodnrl();        // 카메라 모듈값 받아야함 // 카메라 관련 새로운 함수 만들기 // 계속 테스트 해보기
-  findFirstTarget();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
-  columnStack();      // 바로 앞에 있는 기둥의 색을 저장해놓기 //
-  objectLiftup();     // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
-  findYellowColumn(); // 노란색 기둥을 향해 이동 //
-  objectLiftdown();   // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
-  for (int i = 0; i < 3; i++)
-  {
-    Serial.println("for문");
-    flagColorLine(objectColumnFlag[i]); // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
-    Serial.println("1-1");
-    columnStack(); // 현재 서 있는 라인과 방향의 기둥색 가져오기
-    Serial.println("1-2");
-    objectLiftup(); // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
-    Serial.println("1-3");
-    findTargetColumn(objectFlag); // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
-    Serial.println("1-4");
-    objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
-    Serial.println("1-5");
-  }
+  //  shfkstorakfrhwjrwo(); // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동 //
+  //  vkseks();             // 바로 앞에 있는 기둥의 색을 저장해놓기 //
+  //  objectLiftup();       // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수 // 그랩 수정
+  //  findYellowColumn();   // 노란색 기둥을 향해 이동 //
+  //  objectLiftdown();     // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수 // 드랍 수정
+  //  for (int i = 0; i < 3; i++)
+  //  {
+  //    Serial.println("for문");
+  //    flagColorLine(objectColumnFlag[i]);    // 처음기둥 색과 맞는 오브젝트를 찾아서 이동 //
+  //    Serial.println("1-1");
+  //    vkseks();                              // 현재 서 있는 라인과 방향의 기둥색 가져오기
+  //    Serial.println("1-2");
+  //    objectLiftup();                        // 초음파센서 이용해서 거리 조절하고 리프트업 하고 백함수
+  //    Serial.println("1-3");
+  //    findTargetColumn(objectFlag);          // 잡고있는 오브젝트와 같은 색의 기둥을 찾아서 이동 //
+  //    Serial.println("1-4");
+  //    objectLiftdown();                      // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
+  //    Serial.println("1-5");
+  //  }
   //  finish(); // 구현해야함
 
-  prizm.PrizmEnd();
+  //  prizm.PrizmEnd();
+  wheel(60, 60, 0);
 
-  //  a1 = analogRead(A1);
-  //  a2 = analogRead(A2);
-  //  D2 = prizm.readLineSensor(2);
-  //  D3 = prizm.readLineSensor(3);
-  //  D4 = prizm.readLineSensor(4);
-  //  D5 = prizm.readLineSensor(5);
-  //  Serial.print("A1: ");
-  //  Serial.print(a1);
-  //  Serial.print(" / A2: ");
-  //  Serial.print(a2);
-  //  Serial.print(" / D2: ");
-  //  Serial.print(D2);
-  //  Serial.print(" / D3: ");
-  //  Serial.print(D3);
-  //  Serial.print(" / D4: ");
-  //  Serial.println(D4);
-  //  Serial.print(" / D5: ");
-  //  Serial.println(D5);
-  //  delay(200);
+  a1 = analogRead(A1);
+  a2 = analogRead(A2);
+  D2 = prizm.readLineSensor(2);
+  D3 = prizm.readLineSensor(3);
+  D4 = prizm.readLineSensor(4);
+  D5 = prizm.readLineSensor(5);
+  Serial.print("A1: ");
+  Serial.print(a1);
+  Serial.print(" / A2: ");
+  Serial.print(a2);
+  Serial.print(" / D2: ");
+  Serial.print(D2);
+  Serial.print(" / D3: ");
+  Serial.print(D3);
+  Serial.print(" / D4: ");
+  Serial.print(D4);
+  Serial.print(" / D5: ");
+  Serial.print(D5);
+  // delay(200);
 }
