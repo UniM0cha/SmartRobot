@@ -1,6 +1,7 @@
 /**
  *  허스키렌즈 학습 순서 : 빨간색(1), 초록색(2), 파란색(3), 노란색(4)
- * 아날로그 센서로 turn
+ *  스캔올 실패했을 경우 다시 스캔올
+ *  조기종료하고 기둥탐색 알고리즘 수정
  */
 
 #include <PRIZM.h>
@@ -81,6 +82,9 @@ int objectFlagCount = 0;
 // 현재 잡고 있는 오브젝트의 색깔을 저장할 변수
 int objectFlag = 0;
 
+// 배열에 저장된 기둥과 오브젝트의 합계
+int columnCount = 0, objectCount = 0;
+
 void setup()
 {
     prizm.PrizmBegin();
@@ -101,6 +105,15 @@ void setup()
 
 void loop()
 {
+    // rightLineTracing();
+    // rightLineTracing();
+    // rightLineTracing();
+    // rightLineTracing();
+    // leftLineTracing();
+    // leftLineTracing();
+    // leftLineTracing();
+    // leftLineTracing();
+
     start();
     scanAll();
     findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
@@ -421,19 +434,19 @@ void rightLineTracing()
         // D2 = true, D3 = false
         else if (D2 && !D3)
         {
-            wheel(-20, 0, -9);
+            wheel(-30, -5, -3);
         }
 
         // D2 = false, D3 = true
         else if (!D2 && D3)
         {
-            wheel(-20, 0, 9);
+            wheel(-30, 5, 3);
         }
 
         // D2 = false, D3 = false
         else if ((!D2 && !D3) || (D2 && D3))
         {
-            wheel(-40, 0, 1);
+            wheel(-43, 0, 0.8);
         }
     }
 }
@@ -475,40 +488,19 @@ void leftLineTracing()
         // D4 = true, D5 = false
         else if (D4 && !D5)
         {
-            if (ROBOT == SILVER)
-            {
-                wheel(20, 0, -8);
-            }
-            else if (ROBOT == GOLD)
-            {
-                wheel(20, 0, -9);
-            }
+            wheel(30, 5, -3);
         }
 
         // D4 = false, D5 = true
         else if (!D4 && D5)
         {
-            if (ROBOT == SILVER)
-            {
-                wheel(20, 0, 4);
-            }
-            else if (ROBOT == GOLD)
-            {
-                wheel(20, 0, 9);
-            }
+            wheel(30, -5, 3);
         }
 
         // D4 = false, D5 = false
         else if ((!D4 && !D5) || (D4 && D5))
         {
-            if (ROBOT == SILVER)
-            {
-                wheel(40, 0, -2);
-            }
-            else if (ROBOT == GOLD)
-            {
-                wheel(40, 0, 0);
-            }
+            wheel(43, 0, -1);
         }
     }
 }
@@ -546,43 +538,48 @@ void printHusky()
  */
 void scanAll()
 {
-    int count = 0;
-    for (int i = 1; i <= 4; i++)
+    // 다 못채웠을 경우를 대비하여 반복문
+    while (true)
     {
-        // 0번 줄에서 4번 줄까지
-        directionFind(currentLine, i, currentLineFlag, 0);
-        count += colorCheck();
-    }
-
-    // 조기종료
-    if (count >= 4)
-        return;
-
-    // 4번줄에서 턴
-    directionFind(4, 4, 0, 1);
-    count += colorCheck();
-
-    // 조기종료
-    if (count >= 4)
-        return;
-
-    for (int i = 3; i >= 1; i--)
-    {
-        // 4번 줄에서 1번 줄까지
-        directionFind(currentLine, i, currentLineFlag, 1);
-        count += colorCheck();
+        for (int i = 1; i <= 4; i++)
+        {
+            // 1번 줄에서 4번 줄까지
+            directionFind(currentLine, i, currentLineFlag, 0);
+            colorCheck();
+        }
 
         // 조기종료
-        if (count >= 4)
+        if (objectCount == 3 && columnCount == 4)
             return;
+
+        // 4번줄에서 턴
+        directionFind(4, 4, 0, 1);
+        colorCheck();
+
+        // 조기종료
+        if (objectCount == 3 && columnCount == 4)
+            return;
+
+        for (int i = 3; i >= 1; i--)
+        {
+            // 4번 줄에서 1번 줄까지
+            directionFind(currentLine, i, currentLineFlag, 1);
+            colorCheck();
+
+            // 조기종료
+            if (objectCount == 3 && columnCount == 4)
+                return;
+        }
+        printObjectColumn();
+        objectCount = 0;
+        columnCount = 0;
     }
-    printObjectColumn();
 }
 
 /**
  * @brief 허스키렌즈를 사용하여 색깔 판별 후 columnBlock과 objectBlock에 값 채워넣는 함수
  */
-int colorCheck()
+void colorCheck()
 {
     Serial.println("Color Checking...");
     if (!huskylens.request())
@@ -593,7 +590,6 @@ int colorCheck()
     {
         columnBlock[currentLine][currentLineFlag] = 0;
         objectBlock[currentLine][currentLineFlag] = 0;
-        return 0;
     }
     else
     {
@@ -602,6 +598,7 @@ int colorCheck()
         if (huskylens.count() == 1)
         {
             columnBlock[currentLine][currentLineFlag] = 4;
+            columnCount++;
         }
         else
         {
@@ -613,16 +610,19 @@ int colorCheck()
                 {
                     columnBlock[currentLine][currentLineFlag] = result1.ID;
                     objectBlock[currentLine][currentLineFlag] = result2.ID;
+                    columnCount++;
+                    objectCount++;
                 }
                 else
                 {
                     columnBlock[currentLine][currentLineFlag] = result2.ID;
                     objectBlock[currentLine][currentLineFlag] = result1.ID;
+                    columnCount++;
+                    objectCount++;
                 }
                 delay(100);
             }
         }
-        return 1;
     }
 }
 
