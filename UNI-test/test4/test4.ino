@@ -43,7 +43,6 @@ int targetLineFlag = 0;
 int currentLineFlag = 0;
 
 // 처음 기둥 위치
-// {1번줄{왼쪽, 오른쪽}, 2번줄{왼쪽, 오른쪽}, 3번줄{왼쪽, 오른쪽}, 4번줄{왼쪽, 오른쪽}, 5번줄{왼쪽, 오른쪽}}
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
 // int columnBlock[5][2] = {
 //     {0, 0},
@@ -123,7 +122,7 @@ void loop()
         objectLiftdown(); // 초음파센서 이용해서 거리 조절하고 리프트다운 하고 백함수
         Serial.println("1-5");
     }
-    finish();
+    finish(currentLineFlag);
 
     prizm.PrizmEnd();
 }
@@ -199,17 +198,31 @@ void start()
 /**
  * @brief 경기장 -> 끝지점 이동하는 코드
  */
-void finish()
+void finish(int currentLineFlag)
 {
-    directionFind(currentLine, 0, currentLineFlag, 0);
-    wheel(50, 0, -1);
-    delay(2400);
-    wheel(0, 0, 0);
-    delay(100);
-    wheel(0, -50, 2);
-    delay(1600);
-    wheel(0, 0, 0);
-    delay(100);
+    directionFind(currentLine, 0, currentLineFlag, currentLineFlag);
+    if (currentLineFlag == 0)
+    {
+        wheel(50, 0, -1);
+        delay(2400);
+        wheel(0, 0, 0);
+        delay(100);
+        wheel(0, -50, 2);
+        delay(1600);
+        wheel(0, 0, 0);
+        delay(100);
+    }
+    else
+    {
+        wheel(-50, 0, 1);
+        delay(2400);
+        wheel(0, 0, 0);
+        delay(100);
+        wheel(0, 50, -2);
+        delay(1600);
+        wheel(0, 0, 0);
+        delay(100);
+    }
 }
 
 /**
