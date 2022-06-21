@@ -376,8 +376,8 @@ void directionFind(int currentLine, int targetLine, int currentFace, int targetF
  */
 void rightLineTracing()
 {
-    bool D2, D3, crossFlag = false;
-    int a2, start, now, v;
+    bool D2, D3;
+    int a2, start, now;
     start = millis();
 
     while (true)
@@ -408,40 +408,19 @@ void rightLineTracing()
         // D2 = true, D3 = false
         else if (D2 && !D3)
         {
-            if (ROBOT == SILVER)
-            {
-                wheel(-20, 0, -4);
-            }
-            else if (ROBOT == GOLD)
-            {
-                wheel(-20, 0, -9);
-            }
+            wheel(-20, 0, -9);
         }
 
         // D2 = false, D3 = true
         else if (!D2 && D3)
         {
-            if (ROBOT == SILVER)
-            {
-                wheel(-20, 0, 8);
-            }
-            else if (ROBOT == GOLD)
-            {
-                wheel(-20, 0, 9);
-            }
+            wheel(-20, 0, 9);
         }
 
         // D2 = false, D3 = false
         else if ((!D2 && !D3) || (D2 && D3))
         {
-            if (ROBOT == SILVER)
-            {
-                wheel(-40, 0, 2);
-            }
-            else if (ROBOT == GOLD)
-            {
-                wheel(-40, 0, 1);
-            }
+            wheel(-40, 0, 1);
         }
     }
 }
@@ -451,8 +430,8 @@ void rightLineTracing()
  */
 void leftLineTracing()
 {
-    bool D4, D5, crossFlag = false;
-    int a1, start, now, v;
+    bool D4, D5;
+    int a1, start, now;
     start = millis();
 
     while (true)
