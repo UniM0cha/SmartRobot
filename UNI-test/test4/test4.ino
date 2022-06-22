@@ -1,7 +1,5 @@
 /**
  *  허스키렌즈 학습 순서 : 빨간색(1), 초록색(2), 파란색(3), 노란색(4)
- *  스캔올 실패했을 경우 다시 스캔올
- *  조기종료하고 기둥탐색 알고리즘 수정
  */
 
 #include <PRIZM.h>
@@ -15,11 +13,6 @@ PRIZM prizm;
 EXPANSION exc1;
 EXPANSION exc2;
 
-// 금쪽이면 1, 은쪽이면 2
-#define GOLD 1
-#define SILVER 2
-#define ROBOT GOLD
-
 #define RED 1
 #define GREEN 2
 #define BLUE 3
@@ -27,11 +20,6 @@ EXPANSION exc2;
 
 #define TRUE 1
 #define FALSE 0
-
-// 현재 리프트 높이
-int n = 0;
-// 현재 Grab 넓이
-int m = 0;
 
 // 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄 / 3 = 네번째줄 / 4 = 다섯번째줄
 // 현재 자신이 있는 줄
@@ -62,6 +50,7 @@ int objectBlock[5][2] = {
 // 적재해야하는 오브젝트의 색 배열
 // 빨간색 = 1, 초록색 = 2, 파란색 = 3
 int objectColumnFlag[4] = {0, 0, 0, 0};
+
 // 위 배열의 인덱스
 int objectFlagCount = 0;
 
@@ -73,6 +62,8 @@ int columnCount = 0, objectCount = 0;
 
 void setup()
 {
+    prizm.PrizmBegin();
+    prizm.resetEncoder(1);
     Wire.begin();
     // 허스키렌즈 연결될 때까지 로깅
     while (!huskylens.begin(Wire))
@@ -83,7 +74,6 @@ void setup()
         delay(100);
     }
     Serial.println(F("허스키렌즈 연결 완료"));
-    prizm.PrizmBegin();
     Serial.begin(115200);
 }
 
@@ -377,7 +367,7 @@ void directionFind(int currentLine, int targetLine, int currentFace, int targetF
  */
 void rightLineTracing()
 {
-    bool D2, D3;
+    bool D2 = 0, D3 = 0, D4 = 0, D5 = 0;
     int a2, start, now;
     start = millis();
 
@@ -385,6 +375,16 @@ void rightLineTracing()
     {
         D2 = prizm.readLineSensor(2);
         D3 = prizm.readLineSensor(3);
+        // 3,0 1,1 일때는 뒷센서까지 사용하면 안된다.
+        if ((currentLine == 3 && currentLineFlag == 0) || (currentLine == 1 && currentLineFlag == 1))
+        {
+        }
+        else
+        {
+            D4 = prizm.readLineSensor(4);
+            D5 = prizm.readLineSensor(5);
+        }
+
         a2 = analogRead(A2);
         now = millis();
 
@@ -407,19 +407,19 @@ void rightLineTracing()
 
         //== 라인트레이싱 ==//
         // D2 = true, D3 = false
-        else if (D2 && !D3)
+        else if ((D2 && !D3) || (D4 && !D5))
         {
             wheel(-30, -5, -3);
         }
 
         // D2 = false, D3 = true
-        else if (!D2 && D3)
+        else if ((!D2 && D3) || (!D4 && D5))
         {
             wheel(-30, 5, 5);
         }
 
         // D2 = false, D3 = false
-        else if ((!D2 && !D3) || (D2 && D3))
+        else if ((!D2 && !D3) || (D2 && D3) || (!D4 && !D5) || (D4 && D5))
         {
             wheel(-43, 0, 0.8);
         }
@@ -431,7 +431,7 @@ void rightLineTracing()
  */
 void leftLineTracing()
 {
-    bool D4, D5;
+    bool D2 = 0, D3 = 0, D4 = 0, D5 = 0;
     int a1, start, now;
     start = millis();
 
@@ -439,6 +439,15 @@ void leftLineTracing()
     {
         D4 = prizm.readLineSensor(4);
         D5 = prizm.readLineSensor(5);
+        // 1,0 3,1 일 때 뒷 센서까지 사용하면 안된다.
+        if ((currentLine == 1 && currentLineFlag == 0) || (currentLine == 3 && currentLineFlag == 1))
+        {
+        }
+        else
+        {
+            D2 = prizm.readLineSensor(2);
+            D3 = prizm.readLineSensor(3);
+        }
         a1 = analogRead(A1);
         now = millis();
 
@@ -461,19 +470,19 @@ void leftLineTracing()
 
         //== 라인트레이싱 ==//
         // D4 = true, D5 = false
-        else if (D4 && !D5)
+        else if ((D2 && !D3) || (D4 && !D5))
         {
             wheel(30, 5, -3);
         }
 
         // D4 = false, D5 = true
-        else if (!D4 && D5)
+        else if ((!D2 && D3) || (!D4 && D5))
         {
             wheel(30, -5, 3);
         }
 
         // D4 = false, D5 = false
-        else if ((!D4 && !D5) || (D4 && D5))
+        else if ((!D2 && !D3) || (D2 && D3) || (!D4 && !D5) || (D4 && D5))
         {
             wheel(43, 0, -1);
         }
