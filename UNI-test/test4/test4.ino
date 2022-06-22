@@ -36,21 +36,13 @@ int m = 0;
 // 0 = 첫번째줄 / 1 = 두번째줄 / 2 = 세번째줄 / 3 = 네번째줄 / 4 = 다섯번째줄
 // 현재 자신이 있는 줄
 int currentLine = 0;
-// 목적지 줄
-int targetLine = 0;
+
 // 가운데 라인 기준 왼쪽 오른쪽
 // 0 = 왼쪽 1 = 오른쪽
-int targetLineFlag = 0;
 int currentLineFlag = 0;
 
 // 처음 기둥 위치
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3, 노란색 = 4
-// int columnBlock[5][2] = {
-//     {0, 0},
-//     {0, 4},
-//     {1, 0},
-//     {0, 2},
-//     {0, 3}}; //한번 결정되면 그 자리 고정
 int columnBlock[5][2] = {
     {0, 0},
     {0, 0},
@@ -60,12 +52,6 @@ int columnBlock[5][2] = {
 
 // 오브젝트의 위치
 // 없으면 = 0, 빨간색 = 1, 초록색 = 2, 파란색 = 3
-// int objectBlock[5][2] = {
-//     {0, 0},
-//     {0, 0},
-//     {2, 0},
-//     {0, 3},
-//     {0, 1}};
 int objectBlock[5][2] = {
     {0, 0},
     {0, 0},
@@ -429,7 +415,7 @@ void rightLineTracing()
         // D2 = false, D3 = true
         else if (!D2 && D3)
         {
-            wheel(-30, 5, 3);
+            wheel(-30, 5, 5);
         }
 
         // D2 = false, D3 = false
@@ -730,31 +716,10 @@ void findFirstColumn()
     // 현재 보고있는 블록이 노란색이 아니면 바로 들어올리면 된다.
     else
     {
+        objectFlag = objectBlock[currentLine][currentLineFlag];
+        objectBlock[currentLine][currentLineFlag] = 0;
         return;
     }
-
-    // int forflag = 0;
-    // for (int i = 0; i <= 4; i++)
-    // {
-    //     for (int j = 0; j <= 1; j++)
-    //     {
-    //         // 기둥이 빨간색, 초록색, 파란색인 경우
-    //         if (columnBlock[i][j] == RED || columnBlock[i][j] == GREEN || columnBlock[i][j] == BLUE)
-    //         {
-    //             targetLine = i;
-    //             targetLineFlag = j;
-    //             objectFlag = objectBlock[i][j];
-    //             objectBlock[i][j] = 0;
-    //             forflag = 1;
-    //             break;
-    //         }
-    //     }
-    //     if (forflag == 1)
-    //     {
-    //         break;
-    //     }
-    // }
-    // directionFind(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
 /**
@@ -762,7 +727,7 @@ void findFirstColumn()
  */
 void findYellowColumn()
 {
-    int forflag = 0;
+    int forflag = 0, targetLine, targetLineFlag;
     for (int i = 0; i <= 4; i++)
     {
         for (int j = 0; j <= 1; j++)
@@ -791,7 +756,7 @@ void findYellowColumn()
  */
 void findTargetColumn(int targetColumn)
 {
-    int forflag = 0;
+    int forflag = 0, targetLine, targetLineFlag;
     for (int i = 0; i <= 4; i++)
     {
         for (int j = 0; j <= 1; j++)
@@ -821,7 +786,7 @@ void findTargetColumn(int targetColumn)
 void flagColorLine(int targetObject)
 {
     Serial.println(targetObject);
-    int forflag = 0;
+    int forflag = 0, targetLine, targetLineFlag;
     for (int i = 0; i <= 4; i++)
     {
         for (int j = 0; j <= 1; j++)
