@@ -354,7 +354,7 @@ void directionFind(int currentLine, int targetLine, int currentFace, int targetF
  */
 void rightLineTracing()
 {
-    bool D2, D3;
+    bool D2 = 0, D3 = 0, D4 = 0, D5 = 0;
     int a2, start, now;
     start = millis();
 
@@ -362,6 +362,16 @@ void rightLineTracing()
     {
         D2 = prizm.readLineSensor(2);
         D3 = prizm.readLineSensor(3);
+        // 3,0 1,1 일때는 뒷센서까지 사용하면 안된다.
+        if ((currentLine == 3 && currentLineFlag == 0) || (currentLine == 1 && currentLineFlag == 1))
+        {
+        }
+        else
+        {
+            D4 = prizm.readLineSensor(4);
+            D5 = prizm.readLineSensor(5);
+        }
+
         a2 = analogRead(A2);
         now = millis();
 
@@ -384,19 +394,19 @@ void rightLineTracing()
 
         //== 라인트레이싱 ==//
         // D2 = true, D3 = false
-        else if (D2 && !D3)
+        else if ((D2 && !D3) || (D4 && !D5))
         {
             wheel(-30, -5, -3);
         }
 
         // D2 = false, D3 = true
-        else if (!D2 && D3)
+        else if ((!D2 && D3) || (!D4 && D5))
         {
             wheel(-30, 5, 5);
         }
 
         // D2 = false, D3 = false
-        else if ((!D2 && !D3) || (D2 && D3))
+        else if ((!D2 && !D3) || (D2 && D3) || (!D4 && !D5) || (D4 && D5))
         {
             wheel(-43, 0, 0.8);
         }
@@ -408,7 +418,7 @@ void rightLineTracing()
  */
 void leftLineTracing()
 {
-    bool D4, D5;
+    bool D2 = 0, D3 = 0, D4 = 0, D5 = 0;
     int a2, start, now;
     start = millis();
 
@@ -416,6 +426,15 @@ void leftLineTracing()
     {
         D4 = prizm.readLineSensor(4);
         D5 = prizm.readLineSensor(5);
+        // 1,0 3,1 일 때 뒷 센서까지 사용하면 안된다.
+        if ((currentLine == 1 && currentLineFlag == 0) || (currentLine == 3 && currentLineFlag == 1))
+        {
+        }
+        else
+        {
+            D2 = prizm.readLineSensor(2);
+            D3 = prizm.readLineSensor(3);
+        }
         a2 = analogRead(A2);
         now = millis();
 
@@ -438,19 +457,19 @@ void leftLineTracing()
 
         //== 라인트레이싱 ==//
         // D4 = true, D5 = false
-        else if (D4 && !D5)
+        else if ((D2 && !D3) || (D4 && !D5))
         {
             wheel(30, 5, -3);
         }
 
         // D4 = false, D5 = true
-        else if (!D4 && D5)
+        else if ((!D2 && D3) || (!D4 && D5))
         {
             wheel(30, -5, 3);
         }
 
         // D4 = false, D5 = false
-        else if ((!D4 && !D5) || (D4 && D5))
+        else if ((!D2 && !D3) || (D2 && D3) || (!D4 && !D5) || (D4 && D5))
         {
             wheel(43, 0, -1);
         }
@@ -560,9 +579,18 @@ void scanAll()
         printObjectColumn();
         objectCount = 0;
         columnCount = 0;
+        columnBlock[5][2] = {
+            0,
+        };
+        objectBlock[5][2] = {
+            0,
+        };
     }
 }
 
+/**
+ * @brief 허스키렌즈를 사용하여 색깔 판별 후 columnBlock과 objectBlock에 값 채워넣는 함수
+ */
 void colorCheck()
 {
     Serial.println("Color Checking...");
@@ -577,11 +605,12 @@ void colorCheck()
     }
     else
     {
-        Serial.println(F("###########"));
+        Serial.println(F("오브젝트 감지함"));
         // 하나만 감지 = 노란색 기둥
         if (huskylens.count() == 1)
         {
             columnBlock[currentLine][currentLineFlag] = 4;
+            columnCount++;
         }
         else
         {
@@ -593,11 +622,15 @@ void colorCheck()
                 {
                     columnBlock[currentLine][currentLineFlag] = result1.ID;
                     objectBlock[currentLine][currentLineFlag] = result2.ID;
+                    columnCount++;
+                    objectCount++;
                 }
                 else
                 {
                     columnBlock[currentLine][currentLineFlag] = result2.ID;
                     objectBlock[currentLine][currentLineFlag] = result1.ID;
+                    columnCount++;
+                    objectCount++;
                 }
                 delay(100);
             }
@@ -625,35 +658,95 @@ void printObjectColumn()
     }
 }
 
+/**
+ * @brief 노란색기둥말고 가장 앞쪽에서 가까운 기둥을 찾아서 이동하는 함수
+ */
 void findFirstColumn()
 {
-    int forflag = 0;
-    for (int i = 0; i <= 4; i++)
+    /**
+     * 지금 서있는곳의 기둥이 노란색이면,
+     * 양쪽에 블록이 먼저 있는지 확인하고,
+     * 둘 다 없으면 뒤쪽을 탐색한다.
+     * 근데 탐색할 때 현재 줄이 4면 오버플로우가 발생한다.
+     * 이거는 예외처리를 해줘야겠지.
+     * 현재 줄이 4면 무조건적으로
+     *
+     * 지금 서있는곳의 기둥이 색깔 기둥이면,
+     * 바로 잡는다.(return)
+     *
+     */
+
+    if (columnBlock[currentLine][currentLineFlag] == YELLOW)
     {
-        for (int j = 0; j <= 1; j++)
+        // 4번 줄에 있을 경우 둘중에 한쪽이 없다.
+        if (currentLine == 4)
         {
-            // 기둥이 빨간색, 초록색, 파란색인 경우
-            if (columnBlock[i][j] == RED || columnBlock[i][j] == GREEN || columnBlock[i][j] == BLUE)
+            // 같은 방향 먼저
+            if (columnBlock[3][currentLineFlag] != 0)
             {
-                targetLine = i;
-                targetLineFlag = j;
-                objectFlag = objectBlock[i][j];
-                objectBlock[i][j] = 0;
-                forflag = 1;
-                break;
+                objectFlag = objectBlock[3][currentLineFlag];
+                objectBlock[3][currentLineFlag] = 0;
+                directionFind(currentLine, 3, currentLineFlag, currentLineFlag);
+                return;
+            }
+            // 그 다음에 다른 방향
+            else if (columnBlock[3][!currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[3][!currentLineFlag];
+                objectBlock[3][!currentLineFlag] = 0;
+                directionFind(currentLine, 3, currentLineFlag, !currentLineFlag);
+                return;
             }
         }
-        if (forflag == 1)
+
+        // 4번 줄이 아닐 경우 양쪽에 모두 있을 수 있다.
+        else
         {
-            break;
+            if (columnBlock[currentLine + 1][currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine + 1][currentLineFlag];
+                objectBlock[currentLine + 1][currentLineFlag] = 0;
+                directionFind(currentLine, currentLine + 1, currentLineFlag, currentLineFlag);
+                return;
+            }
+            else if (columnBlock[currentLine - 1][currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine - 1][currentLineFlag];
+                objectBlock[currentLine - 1][currentLineFlag] = 0;
+                directionFind(currentLine, currentLine - 1, currentLineFlag, currentLineFlag);
+                return;
+            }
+            else if (columnBlock[currentLine + 1][!currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine + 1][!currentLineFlag];
+                objectBlock[currentLine + 1][!currentLineFlag] = 0;
+                directionFind(currentLine, currentLine + 1, currentLineFlag, !currentLineFlag);
+                return;
+            }
+            else if (columnBlock[currentLine - 1][!currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine - 1][!currentLineFlag];
+                objectBlock[currentLine - 1][!currentLineFlag] = 0;
+                directionFind(currentLine, currentLine - 1, currentLineFlag, !currentLineFlag);
+                return;
+            }
         }
     }
-    directionFind(currentLine, targetLine, currentLineFlag, targetLineFlag);
+    // 현재 보고있는 블록이 노란색이 아니면 바로 들어올리면 된다.
+    else
+    {
+        objectFlag = objectBlock[currentLine][currentLineFlag];
+        objectBlock[currentLine][currentLineFlag] = 0;
+        return;
+    }
 }
 
+/**
+ * @brief 노란색 기둥을 찾아서 이동하는 함수
+ */
 void findYellowColumn()
 {
-    int forflag = 0;
+    int forflag = 0, targetLine, targetLineFlag;
     for (int i = 0; i <= 4; i++)
     {
         for (int j = 0; j <= 1; j++)
@@ -675,9 +768,14 @@ void findYellowColumn()
     directionFind(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
+/**
+ * @brief 매개변수로 주어진 기둥을 찾아서 이동하는 함수
+ *
+ * @param targetColumn 찾을 기둥 값
+ */
 void findTargetColumn(int targetColumn)
 {
-    int forflag = 0;
+    int forflag = 0, targetLine, targetLineFlag;
     for (int i = 0; i <= 4; i++)
     {
         for (int j = 0; j <= 1; j++)
@@ -699,10 +797,15 @@ void findTargetColumn(int targetColumn)
     directionFind(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
+/**
+ * @brief 매개변수로 주어진 오브젝트를 찾아서 이동하는 함수
+ *
+ * @param targetObject 찾을 오브젝트 값
+ */
 void flagColorLine(int targetObject)
 {
     Serial.println(targetObject);
-    int forflag = 0;
+    int forflag = 0, targetLine, targetLineFlag;
     for (int i = 0; i <= 4; i++)
     {
         for (int j = 0; j <= 1; j++)
@@ -750,6 +853,9 @@ void objectLiftdown()
     // 오브젝트 리프트다운을 위한 전진과 리프트다운 하고 뒤에까지 오기
 }
 
+/**
+ * @brief 그랩 초기화
+ */
 void startGrab()
 {
     prizm.setMotorSpeed(2, 600);
@@ -758,36 +864,42 @@ void startGrab()
     delay(100);
 }
 
+/**
+ * @brief 오브젝트 잡는 함수
+ */
 void objectGrab()
 {
-    // TODO: 모터 회전
     prizm.setMotorSpeed(2, -600);
     delay(500);
     prizm.setMotorSpeed(2, 0);
     delay(100);
 }
 
+/**
+ * @brief 오브젝트 놓는 함수
+ */
 void objectDrop()
 {
-    // TODO: 모터 회전
     prizm.setMotorSpeed(2, 600);
     delay(500);
     prizm.setMotorSpeed(2, 0);
     delay(100);
 }
 
+//리프트 들기 함수
 void lift_up()
-{ //리프트 up 함수
+{
     prizm.setMotorSpeed(1, -600);
-    delay(400);
+    delay(800);
     prizm.setMotorSpeed(1, 0);
     delay(100);
 }
 
+//리프트 내리기 함수
 void lift_down()
-{ //리프트 down 함수
+{
     prizm.setMotorSpeed(1, 600);
-    delay(400);
+    delay(800);
     prizm.setMotorSpeed(1, 0);
     delay(100);
 }
