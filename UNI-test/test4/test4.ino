@@ -557,6 +557,12 @@ void scanAll()
         printObjectColumn();
         objectCount = 0;
         columnCount = 0;
+        columnBlock[5][2] = {
+            0,
+        };
+        objectBlock[5][2] = {
+            0,
+        };
     }
 }
 
