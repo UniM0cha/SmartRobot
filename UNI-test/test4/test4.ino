@@ -87,11 +87,7 @@ int columnCount = 0, objectCount = 0;
 
 void setup()
 {
-    prizm.PrizmBegin();
-    prizm.resetEncoder(1);
-    Serial.begin(115200);
     Wire.begin();
-
     // 허스키렌즈 연결될 때까지 로깅
     while (!huskylens.begin(Wire))
     {
@@ -101,19 +97,12 @@ void setup()
         delay(100);
     }
     Serial.println(F("허스키렌즈 연결 완료"));
+    prizm.PrizmBegin();
+    Serial.begin(115200);
 }
 
 void loop()
 {
-    // rightLineTracing();
-    // rightLineTracing();
-    // rightLineTracing();
-    // rightLineTracing();
-    // leftLineTracing();
-    // leftLineTracing();
-    // leftLineTracing();
-    // leftLineTracing();
-
     start();
     scanAll();
     findFirstColumn();  // 노란색 기둥을 제외한 가장 앞 쪽 기둥 탐색 후 이동
@@ -669,28 +658,103 @@ void printObjectColumn()
  */
 void findFirstColumn()
 {
-    int forflag = 0;
-    for (int i = 0; i <= 4; i++)
+    /**
+     * 지금 서있는곳의 기둥이 노란색이면,
+     * 양쪽에 블록이 먼저 있는지 확인하고,
+     * 둘 다 없으면 뒤쪽을 탐색한다.
+     * 근데 탐색할 때 현재 줄이 4면 오버플로우가 발생한다.
+     * 이거는 예외처리를 해줘야겠지.
+     * 현재 줄이 4면 무조건적으로
+     *
+     * 지금 서있는곳의 기둥이 색깔 기둥이면,
+     * 바로 잡는다.(return)
+     *
+     */
+
+    if (columnBlock[currentLine][currentLineFlag] == YELLOW)
     {
-        for (int j = 0; j <= 1; j++)
+        // 4번 줄에 있을 경우 둘중에 한쪽이 없다.
+        if (currentLine == 4)
         {
-            // 기둥이 빨간색, 초록색, 파란색인 경우
-            if (columnBlock[i][j] == RED || columnBlock[i][j] == GREEN || columnBlock[i][j] == BLUE)
+            // 같은 방향 먼저
+            if (columnBlock[3][currentLineFlag] != 0)
             {
-                targetLine = i;
-                targetLineFlag = j;
-                objectFlag = objectBlock[i][j];
-                objectBlock[i][j] = 0;
-                forflag = 1;
-                break;
+                objectFlag = objectBlock[3][currentLineFlag];
+                objectBlock[3][currentLineFlag] = 0;
+                directionFind(currentLine, 3, currentLineFlag, currentLineFlag);
+                return;
+            }
+            // 그 다음에 다른 방향
+            else if (columnBlock[3][!currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[3][!currentLineFlag];
+                objectBlock[3][!currentLineFlag] = 0;
+                directionFind(currentLine, 3, currentLineFlag, !currentLineFlag);
+                return;
             }
         }
-        if (forflag == 1)
+
+        // 4번 줄이 아닐 경우 양쪽에 모두 있을 수 있다.
+        else
         {
-            break;
+            if (columnBlock[currentLine + 1][currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine + 1][currentLineFlag];
+                objectBlock[currentLine + 1][currentLineFlag] = 0;
+                directionFind(currentLine, currentLine + 1, currentLineFlag, currentLineFlag);
+                return;
+            }
+            else if (columnBlock[currentLine - 1][currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine - 1][currentLineFlag];
+                objectBlock[currentLine - 1][currentLineFlag] = 0;
+                directionFind(currentLine, currentLine - 1, currentLineFlag, currentLineFlag);
+                return;
+            }
+            else if (columnBlock[currentLine + 1][!currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine + 1][!currentLineFlag];
+                objectBlock[currentLine + 1][!currentLineFlag] = 0;
+                directionFind(currentLine, currentLine + 1, currentLineFlag, !currentLineFlag);
+                return;
+            }
+            else if (columnBlock[currentLine - 1][!currentLineFlag] != 0)
+            {
+                objectFlag = objectBlock[currentLine - 1][!currentLineFlag];
+                objectBlock[currentLine - 1][!currentLineFlag] = 0;
+                directionFind(currentLine, currentLine - 1, currentLineFlag, !currentLineFlag);
+                return;
+            }
         }
     }
-    directionFind(currentLine, targetLine, currentLineFlag, targetLineFlag);
+    // 현재 보고있는 블록이 노란색이 아니면 바로 들어올리면 된다.
+    else
+    {
+        return;
+    }
+
+    // int forflag = 0;
+    // for (int i = 0; i <= 4; i++)
+    // {
+    //     for (int j = 0; j <= 1; j++)
+    //     {
+    //         // 기둥이 빨간색, 초록색, 파란색인 경우
+    //         if (columnBlock[i][j] == RED || columnBlock[i][j] == GREEN || columnBlock[i][j] == BLUE)
+    //         {
+    //             targetLine = i;
+    //             targetLineFlag = j;
+    //             objectFlag = objectBlock[i][j];
+    //             objectBlock[i][j] = 0;
+    //             forflag = 1;
+    //             break;
+    //         }
+    //     }
+    //     if (forflag == 1)
+    //     {
+    //         break;
+    //     }
+    // }
+    // directionFind(currentLine, targetLine, currentLineFlag, targetLineFlag);
 }
 
 /**
