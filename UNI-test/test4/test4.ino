@@ -146,8 +146,8 @@ void start()
 {
     setDiff();
     startGrab();
-    wheel(-60, -60, 0);
-    delay(600);
+    wheel(-80, -80, 0);
+    delay(1000);
     wheel(-50, 0, 0);
     delay(500);
 
@@ -185,25 +185,31 @@ void finish(int currentLineFlag)
     directionFind(currentLine, 0, currentLineFlag, currentLineFlag);
     if (currentLineFlag == 0)
     {
-        wheel(50, 0, -1);
-        delay(2400);
+        // wheel(50, 0, -1);
+        // delay(2400);
+        // wheel(0, 0, 0);
+        // wheel(0, -50, 2);
+        // delay(1600);
+        // wheel(0, 0, 0);
+        wheel(80, -80, 0);
+        delay(1000);
+        wheel(80, 0, 0);
+        delay(500);
         wheel(0, 0, 0);
-        delay(100);
-        wheel(0, -50, 2);
-        delay(1600);
-        wheel(0, 0, 0);
-        delay(100);
     }
     else
     {
-        wheel(-50, 0, 1);
-        delay(2400);
+        wheel(80, -80, 0);
+        delay(1200);
+        wheel(-80, 0, 0);
+        delay(500);
         wheel(0, 0, 0);
-        delay(100);
-        wheel(0, 50, -2);
-        delay(1600);
-        wheel(0, 0, 0);
-        delay(100);
+        // wheel(-50, 0, 1);
+        // delay(2400);
+        // wheel(0, 0, 0);
+        // wheel(0, 50, -2);
+        // delay(1600);
+        // wheel(0, 0, 0);
     }
 }
 
@@ -266,7 +272,7 @@ void backwardFromBlock()
     while (true)
     {
         a3 = prizm.readSonicSensorCM(A3);
-        if (a3 >= 12)
+        if (a3 >= 11)
         {
             wheel(0, 0, 0);
             return;
@@ -290,7 +296,6 @@ void turn()
         {
             delay(150);
             wheel(0, 0, 0);
-            delay(100);
             currentLineFlag = !currentLineFlag;
             return;
         }
@@ -391,7 +396,7 @@ void rightLineTracing()
         a2 = analogRead(A2);
         now = millis();
 
-        if (a2 > 200 && now - start > 1000)
+        if (a2 > 100 && now - start > 800)
         {
             wheel(0, 0, 0);
 
@@ -404,7 +409,6 @@ void rightLineTracing()
                 currentLine--;
             }
 
-            delay(100);
             return;
         }
 
@@ -469,7 +473,7 @@ void leftLineTracing()
         a1 = analogRead(A1);
         now = millis();
 
-        if (a1 > 200 && now - start > 1000)
+        if (a1 > 100 && now - start > 800)
         {
             wheel(0, 0, 0);
 
@@ -482,7 +486,6 @@ void leftLineTracing()
                 currentLine++;
             }
 
-            delay(100);
             return;
         }
 
@@ -648,7 +651,6 @@ void colorCheck()
                     columnCount++;
                     objectCount++;
                 }
-                delay(100);
             }
         }
     }
@@ -900,7 +902,6 @@ void startGrab()
     prizm.setMotorSpeed(2, 600);
     delay(600);
     prizm.setMotorSpeed(2, 0);
-    delay(100);
 }
 
 /**
@@ -911,7 +912,6 @@ void objectGrab()
     prizm.setMotorSpeed(2, -600);
     delay(500);
     prizm.setMotorSpeed(2, 0);
-    delay(100);
 }
 
 /**
@@ -922,7 +922,6 @@ void objectDrop()
     prizm.setMotorSpeed(2, 600);
     delay(500);
     prizm.setMotorSpeed(2, 0);
-    delay(100);
 }
 
 //리프트 들기 함수
@@ -931,7 +930,6 @@ void lift_up()
     prizm.setMotorSpeed(1, -600);
     delay(800);
     prizm.setMotorSpeed(1, 0);
-    delay(100);
 }
 
 //리프트 내리기 함수
@@ -940,7 +938,6 @@ void lift_down()
     prizm.setMotorSpeed(1, 600);
     delay(800);
     prizm.setMotorSpeed(1, 0);
-    delay(100);
 }
 
 void setDiff()
