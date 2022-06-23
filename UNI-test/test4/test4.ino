@@ -60,6 +60,9 @@ int objectFlag = 0;
 // 배열에 저장된 기둥과 오브젝트의 합계
 int columnCount = 0, objectCount = 0;
 
+// 아날로그 센서의 차이값
+int diff = 0;
+
 void setup()
 {
     prizm.PrizmBegin();
@@ -141,9 +144,10 @@ void wheel(int x, int y, int z)
  */
 void start()
 {
+    setDiff();
     startGrab();
-    wheel(-30, -30, 0);
-    delay(1200);
+    wheel(-60, -60, 0);
+    delay(600);
     wheel(-50, 0, 0);
     delay(500);
 
@@ -212,29 +216,39 @@ void fowardToBlock()
     int a1, a2, a3;
     while (true)
     {
-        a1 = analogRead(A1);
+
+        a1 = analogRead(A1) + diff;
         a2 = analogRead(A2);
+        // a1 = analogRead(A1);
+        // a2 = analogRead(A2);
         a3 = prizm.readSonicSensorCM(A3);
-        if (a3 <= 7)
+        if (a3 <= 6)
         {
             wheel(0, 0, 0);
             return;
         }
-
-        else if (a1 >= 200 && a2 < 200)
+        if (a1 > a2)
         {
-            // 좌직진
-            wheel(0, -15, -7);
+            wheel(0, -18, -7);
         }
-        else if (a1 < 200 && a2 >= 200)
+        else if (a1 < a2)
         {
-            // 우직진
-            wheel(0, -15, 7);
+            wheel(0, -18, 7);
         }
+        // else if (a1 >= 100 && a2 < 100)
+        // {
+        //     // 좌직진
+        //     wheel(0, -15, -7);
+        // }
+        // else if (a1 < 100 && a2 >= 100)
+        // {
+        //     // 우직진
+        //     wheel(0, -15, 7);
+        // }
         else
         {
             // 전진
-            wheel(0, -30, 2);
+            wheel(0, -25, 0);
         }
         delay(10);
     }
@@ -274,11 +288,10 @@ void turn()
     {
         if (analogRead(A2) > 200)
         {
-            delay(300);
+            delay(150);
             wheel(0, 0, 0);
             delay(100);
             currentLineFlag = !currentLineFlag;
-            Serial.println(String() + F("currentLineFlag = ") + currentLineFlag);
             return;
         }
     }
@@ -294,7 +307,6 @@ void turn()
  */
 void directionFind(int currentLine, int targetLine, int currentFace, int targetFace)
 {
-    Serial.println(String() + F("directionFind()\ncurrentLine : ") + currentLine + F("\ntargetLine : ") + targetLine + F("\ncurrentFace : ") + currentFace + F("\ndestFace : ") + targetFace);
     // 0번쪽을 보고 있으면 우측이동 = 줄 증가
     // 1번쪽을 보고 있으면 우측이동 = 줄 감소
 
@@ -368,27 +380,18 @@ void directionFind(int currentLine, int targetLine, int currentFace, int targetF
 void rightLineTracing()
 {
     bool D2 = 0, D3 = 0, D4 = 0, D5 = 0;
-    int a2, start, now;
+    int a2, start, now, start2, now2;
     start = millis();
 
     while (true)
     {
         D2 = prizm.readLineSensor(2);
         D3 = prizm.readLineSensor(3);
-        // 3,0 1,1 일때는 뒷센서까지 사용하면 안된다.
-        if ((currentLine == 3 && currentLineFlag == 0) || (currentLine == 1 && currentLineFlag == 1))
-        {
-        }
-        else
-        {
-            D4 = prizm.readLineSensor(4);
-            D5 = prizm.readLineSensor(5);
-        }
 
         a2 = analogRead(A2);
         now = millis();
 
-        if (a2 > 200 && now - start > 500)
+        if (a2 > 200 && now - start > 1000)
         {
             wheel(0, 0, 0);
 
@@ -405,23 +408,46 @@ void rightLineTracing()
             return;
         }
 
-        //== 라인트레이싱 ==//
-        // D2 = true, D3 = false
-        else if ((D2 && !D3) || (D4 && !D5))
+        else if (now - start < 1000)
         {
-            wheel(-30, -5, -3);
-        }
+            //== 라인트레이싱 ==//
+            // D2 = true, D3 = false
+            if (D2 && !D3)
+            {
+                wheel(-55, -0, -8);
+            }
 
-        // D2 = false, D3 = true
-        else if ((!D2 && D3) || (!D4 && D5))
-        {
-            wheel(-30, 5, 5);
+            // D2 = false, D3 = true
+            else if (!D2 && D3)
+            {
+                wheel(-55, 0, 8);
+            }
+            // D2 = false, D3 = false
+            else if ((!D2 && !D3) || (D2 && D3))
+            {
+                wheel(-60, 0, 1);
+            }
         }
-
-        // D2 = false, D3 = false
-        else if ((!D2 && !D3) || (D2 && D3) || (!D4 && !D5) || (D4 && D5))
+        else
         {
-            wheel(-43, 0, 0.8);
+            //== 라인트레이싱 ==//
+            // D2 = true, D3 = false
+            if (D2 && !D3)
+            {
+                wheel(-35, -0, -4);
+            }
+
+            // D2 = false, D3 = true
+            else if (!D2 && D3)
+            {
+                wheel(-35, 0, 4);
+            }
+
+            // D2 = false, D3 = false
+            else if ((!D2 && !D3) || (D2 && D3))
+            {
+                wheel(-40, 0, 1);
+            }
         }
     }
 }
@@ -439,19 +465,11 @@ void leftLineTracing()
     {
         D4 = prizm.readLineSensor(4);
         D5 = prizm.readLineSensor(5);
-        // 1,0 3,1 일 때 뒷 센서까지 사용하면 안된다.
-        if ((currentLine == 1 && currentLineFlag == 0) || (currentLine == 3 && currentLineFlag == 1))
-        {
-        }
-        else
-        {
-            D2 = prizm.readLineSensor(2);
-            D3 = prizm.readLineSensor(3);
-        }
+
         a1 = analogRead(A1);
         now = millis();
 
-        if (a1 > 200 && now - start > 500)
+        if (a1 > 200 && now - start > 1000)
         {
             wheel(0, 0, 0);
 
@@ -468,23 +486,47 @@ void leftLineTracing()
             return;
         }
 
-        //== 라인트레이싱 ==//
-        // D4 = true, D5 = false
-        else if ((D2 && !D3) || (D4 && !D5))
+        else if (now - start < 1000)
         {
-            wheel(30, 5, -3);
-        }
+            //== 라인트레이싱 ==//
+            // D4 = true, D5 = false
+            if (D4 && !D5)
+            {
+                wheel(55, 0, -8);
+            }
 
-        // D4 = false, D5 = true
-        else if ((!D2 && D3) || (!D4 && D5))
-        {
-            wheel(30, -5, 3);
-        }
+            // D4 = false, D5 = true
+            else if (!D4 && D5)
+            {
+                wheel(55, -0, 8);
+            }
 
-        // D4 = false, D5 = false
-        else if ((!D2 && !D3) || (D2 && D3) || (!D4 && !D5) || (D4 && D5))
+            // D4 = false, D5 = false
+            else if ((!D4 && !D5) || (D4 && D5))
+            {
+                wheel(60, 0, -1);
+            }
+        }
+        else
         {
-            wheel(43, 0, -1);
+            //== 라인트레이싱 ==//
+            // D4 = true, D5 = false
+            if (D4 && !D5)
+            {
+                wheel(35, 0, -4);
+            }
+
+            // D4 = false, D5 = true
+            else if (!D4 && D5)
+            {
+                wheel(35, -0, 4);
+            }
+
+            // D4 = false, D5 = false
+            else if ((!D4 && !D5) || (D4 && D5))
+            {
+                wheel(40, 0, -1);
+            }
         }
     }
 }
@@ -494,17 +536,13 @@ void printHusky()
     while (true)
     {
         if (!huskylens.request())
-            Serial.println(F("허스키렌즈와 연결 실패!"));
+            ;
         else if (!huskylens.isLearned())
-            Serial.println(F("학습되지 않음!"));
+            ;
         else if (!huskylens.available())
-        {
-            Serial.println(F("오브젝트 감지하지 못함!"));
-        }
+            ;
         else
         {
-            Serial.println(F("오브젝트 감지함"));
-            // Serial.println(huskylens.count());  // 허스키렌즈에 감지된 오브젝트의 개수
             while (huskylens.available())
             {
                 HUSKYLENSResult result = huskylens.read();
@@ -627,7 +665,6 @@ void printResult(HUSKYLENSResult result)
     }
     else
     {
-        Serial.println("Object unknown!");
     }
 }
 
@@ -800,7 +837,6 @@ void findTargetColumn(int targetColumn)
  */
 void flagColorLine(int targetObject)
 {
-    Serial.println(targetObject);
     int forflag = 0, targetLine, targetLineFlag;
     for (int i = 0; i <= 4; i++)
     {
@@ -831,7 +867,6 @@ void flagColorLine(int targetObject)
 void columnStack()
 {
     objectColumnFlag[objectFlagCount] = columnBlock[currentLine][currentLineFlag];
-    Serial.println(objectColumnFlag[objectFlagCount]);
     objectFlagCount++;
 }
 
@@ -906,4 +941,11 @@ void lift_down()
     delay(800);
     prizm.setMotorSpeed(1, 0);
     delay(100);
+}
+
+void setDiff()
+{
+    int a1 = analogRead(A1);
+    int a2 = analogRead(A2);
+    diff = a2 - a1;
 }
